@@ -223,9 +223,22 @@ wire tclock = SW[9] ? clock4 :
 wire resetn = KEY[1];
            
 wire [7:0] romdata;
-wire [1:0] ds;
-mbc1 rom0(tclock, resetn, addr, outdata, romdata, load, store, ds);
-assign LEDR[1:0] = ds;
+mbc1 cart_rom(
+    tclock, clock115200, resetn, 
+    addr, outdata, romdata, load, store, SW == 0,
+
+    //////////// Uart to USB //////////
+	UART_RX,
+    
+    //////////// SRAM //////////
+	SRAM_A,
+	SRAM_CE_n,
+	SRAM_D,
+	SRAM_LB_n,
+	SRAM_OE_n,
+	SRAM_UB_n,
+	SRAM_WE_n
+);
 
 wire [7:0] ramdata;
 ram ram0(addr, tclock, outdata, 
