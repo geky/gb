@@ -222,10 +222,29 @@ wire tclock = SW[9] ? clock4 :
               SW[6] ? clockc : KEY[0];
 wire resetn = KEY[1];
            
-wire [7:0] romdata;   
-rom rom0(addr[7:0], tclock, romdata);
+wire [7:0] romdata;
+wire [1:0] ds;
+mbc1 rom0(tclock, resetn, addr, outdata, romdata, load, store, ds);
+assign LEDR[1:0] = ds;
 
-lr35902 cpu(tclock, resetn, addr, indata, outdata, load, store, u, f);
+wire [7:0] ramdata;
+ram ram0(addr, tclock, outdata, 
+         store && addr >= 16'hc000 && addr < 16'he000, 
+         ramdata);
+         
+wire [7:0] highramdata;
+highram ramh(addr, tclock, outdata,
+             store && addr >= 16'hff80 && addr < 16'hffff,
+             highramdata);
+
+         
+wire [15:0] daf;
+wire [15:0] dbc;
+wire [15:0] dde;
+wire [15:0] dhl;
+wire [15:0] dsp;
+wire [15:0] dpc;
+lr35902 cpu(tclock, resetn, addr, indata, outdata, load, store, u, f, daf, dbc, dde, dhl, dsp, dpc);
 wire load;
 wire store;
 assign LEDG[7:4] = f;
@@ -236,6 +255,7 @@ reg [15:0] addrlatch;
 reg [15:0] addrlatch2;
 reg [15:0] datalatch;
 reg loadlatch;
+reg loadlatch2;
 reg storelatch;
 
 always @(posedge tclock or negedge resetn) begin
@@ -244,21 +264,27 @@ always @(posedge tclock or negedge resetn) begin
         addrlatch2 <= 0;
         datalatch <= 0;
         loadlatch <= 0;
+        loadlatch2 <= 0;
         storelatch <= 0;
     end else begin
         addrlatch <= addr;
         addrlatch2 <= addrlatch;
         datalatch <= outdata;
         loadlatch <= load;
+        loadlatch2 <= loadlatch;
         storelatch <= store;
     end
 end
 
 always @(*) begin
-    if (addrlatch2[15]) begin
-        indata = linkdata;
-    end else begin
+    if (addrlatch2 < 16'h8000) begin
         indata = romdata;
+    end else if (addrlatch2 >= 16'hc000 && addrlatch2 < 16'he000) begin
+        indata = ramdata;
+    end else if (addrlatch2 >= 16'hff80 && addrlatch2 < 16'hffff) begin
+        indata = highramdata;
+    end else begin
+        indata = linkdata;
     end
 end
 
@@ -267,19 +293,20 @@ seg16 segs(debug, {HEX3,HEX2,HEX1,HEX0});
 
 reg [15:0] debug;
 
-
 always @(*) begin
-    if (SW[3]) begin
-        debug = indata;
-    end else if (SW[2]) begin
-        debug = addrlatch2;
-    end else if (SW[1]) begin
-        debug = outdata;
-    end else if (SW[0]) begin
-        debug = addr;
-    end else begin
-        debug = u;
-    end
+    case (SW[3:0])
+    4'b1101: debug = dpc;
+    4'b1100: debug = dsp;
+    4'b1011: debug = dhl;
+    4'b1010: debug = dde;
+    4'b1001: debug = dbc;
+    4'b1000: debug = daf;
+    4'b0101: debug = loadlatch2 ? indata : 16'h0000;
+    4'b0100: debug = loadlatch2 ? addrlatch2 : 16'h0000;
+    4'b0011: debug = store ? outdata : 16'h0000;
+    4'b0010: debug = store ? addr : 16'h0000;
+    default: debug = u;
+    endcase
 end  
   
 

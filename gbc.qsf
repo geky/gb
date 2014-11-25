@@ -5,7 +5,7 @@
 set_global_assignment -name FAMILY "Cyclone V"
 set_global_assignment -name DEVICE 5CGXFC5C6F27C7
 set_global_assignment -name TOP_LEVEL_ENTITY "gbc"
-set_global_assignment -name ORIGINAL_QUARTUS_VERSION "13.0"
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.0
 set_global_assignment -name LAST_QUARTUS_VERSION 14.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "22:37:36 NOVEMBER 19,2014"
 set_global_assignment -name DEVICE_FILTER_PACKAGE FBGA
@@ -16,7 +16,7 @@ set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8_H6
 # CLOCK
 #============================================================
 set_location_assignment PIN_U12 -to CLOCK_125_p
-set_instance_assignment -name IO_STANDARD "LVDS" -to CLOCK_125_p
+set_instance_assignment -name IO_STANDARD LVDS -to CLOCK_125_p
 set_location_assignment PIN_R20 -to CLOCK_50_B5B
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK_50_B5B
 set_location_assignment PIN_N20 -to CLOCK_50_B6A
@@ -291,11 +291,14 @@ set_global_assignment -name VERILOG_FILE div.v
 set_global_assignment -name VERILOG_FILE gbc.v
 set_global_assignment -name SDC_FILE gbc.SDC
 set_global_assignment -name VERILOG_FILE ppu.v
-set_global_assignment -name VERILOG_FILE vga_generator.v
 set_global_assignment -name VERILOG_FILE hdmi.v
 set_global_assignment -name VERILOG_FILE lr35902.v
 set_global_assignment -name VERILOG_FILE lr_ucode.v
-set_global_assignment -name QIP_FILE rom.qip
 set_global_assignment -name VERILOG_FILE lr_alu.v
 set_global_assignment -name VERILOG_FILE link.v
+set_global_assignment -name VERILOG_FILE mbc1.v
+set_global_assignment -name QIP_FILE mbc1rom.qip
+set_global_assignment -name QIP_FILE ram.qip
+set_global_assignment -name QIP_FILE mcb1rom.qip
+set_global_assignment -name QIP_FILE highram.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

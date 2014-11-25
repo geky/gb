@@ -41,7 +41,8 @@ parameter SLA       = 5'h0d;
 parameter SRA       = 5'h0e;
 parameter SRL       = 5'h0f;
 parameter SWAP      = 5'h10;
-parameter DAA       = 5'h11;
+parameter SWAP2     = 5'h11;
+parameter DAA       = 5'h12;
 
 parameter A_0       = 5'h00;
 parameter A_1       = 5'h01;
@@ -170,8 +171,9 @@ always @(posedge clock or negedge resetn) begin
 	16'h0814: ucode <= {16'h0815, D_DATA, OR, A_SP, B_0, 2'b00, CC_xxxx};
 	16'h0815: ucode <= {16'h0816, D_TEMP, ADD, A_D16, B_1, 2'b01, CC_xxxx};
 	16'h0816: ucode <= {16'h0817, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'h0817: ucode <= {16'h0818, D_0, OR, A_TEMP, B_0, 2'b01, CC_xxxx};
-	16'h0818: ucode <= {16'h0048, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'h0817: ucode <= {16'h0818, D_DATA, SWAP2, A_SP, B_0, 2'b00, CC_xxxx};
+	16'h0818: ucode <= {16'h0819, D_0, OR, A_TEMP, B_0, 2'b01, CC_xxxx};
+	16'h0819: ucode <= {16'h0047, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// ADD HL,BC
 	16'h0910: ucode <= {16'h0044, D_HL, ADD2, A_HL, B_BC, 2'b00, CC_x0HC};
 	// LD A,(BC)
@@ -694,37 +696,42 @@ always @(posedge clock or negedge resetn) begin
 	16'hc410: ucode <= {16'h0036, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
 	{4'b0xxx, 12'h36}: ucode <= {16'hc412, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	{4'b1xxx, 12'h36}: ucode <= {16'h0047, D_PC, ADD, A_PC, B_2, 2'b00, CC_xxxx};
-	16'hc412: ucode <= {16'hc413, D_DATA, OR, A_PC, B_0, 2'b00, CC_xxxx};
+	16'hc412: ucode <= {16'hc413, D_TEMP, ADD, A_PC, B_2, 2'b00, CC_xxxx};
 	16'hc413: ucode <= {16'hc414, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hc414: ucode <= {16'hc415, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
-	16'hc415: ucode <= {16'hc416, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hc416: ucode <= {16'hc417, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
-	16'hc417: ucode <= {16'hc418, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hc418: ucode <= {16'hc419, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hc414: ucode <= {16'hc415, D_DATA, SWAP2, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hc415: ucode <= {16'hc416, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+	16'hc416: ucode <= {16'hc417, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hc417: ucode <= {16'hc418, D_DATA, OR, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hc418: ucode <= {16'hc419, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
 	16'hc419: ucode <= {16'hc41a, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hc41a: ucode <= {16'hc41b, D_TEMP, OR, A_D8, B_0, 2'b00, CC_xxxx};
-	16'hc41b: ucode <= {16'hc41c, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
-	16'hc41c: ucode <= {16'hc41d, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hc41d: ucode <= {16'h0047, D_PC, OR, A_D16, B_0, 2'b00, CC_xxxx};
+	16'hc41a: ucode <= {16'hc41b, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hc41b: ucode <= {16'hc41c, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hc41c: ucode <= {16'hc41d, D_TEMP, OR, A_D8, B_0, 2'b00, CC_xxxx};
+	16'hc41d: ucode <= {16'hc41e, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hc41e: ucode <= {16'hc41f, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hc41f: ucode <= {16'h0045, D_PC, OR, A_D16, B_0, 2'b00, CC_xxxx};
 	// PUSH BC
-	16'hc510: ucode <= {16'hc511, D_DATA, OR, A_BC, B_0, 2'b00, CC_xxxx};
-	16'hc511: ucode <= {16'hc512, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hc512: ucode <= {16'hc513, D_SP, ADD, A_SP, B_1, 2'b10, CC_xxxx};
+	16'hc510: ucode <= {16'hc511, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
+	16'hc511: ucode <= {16'hc512, D_DATA, SWAP2, A_BC, B_0, 2'b00, CC_xxxx};
+	16'hc512: ucode <= {16'hc513, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
 	16'hc513: ucode <= {16'hc514, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hc514: ucode <= {16'hc515, D_0, OR, A_SP, B_0, 2'b10, CC_xxxx};
-	16'hc515: ucode <= {16'h0047, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hc514: ucode <= {16'hc515, D_DATA, OR, A_BC, B_0, 2'b00, CC_xxxx};
+	16'hc515: ucode <= {16'hc516, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
+	16'hc516: ucode <= {16'h0046, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// ADD A,d8
 	16'hc610: ucode <= {16'hc611, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
 	16'hc611: ucode <= {16'hc612, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	16'hc612: ucode <= {16'h0042, D_A, ADD, A_A, B_D8, 2'b00, CC_Z0HC};
 	// RST 00H
-	16'hc710: ucode <= {16'hc711, D_DATA, SUB, A_PC, B_1, 2'b00, CC_xxxx};
+	16'hc710: ucode <= {16'hc711, D_TEMP, SUB, A_PC, B_1, 2'b00, CC_xxxx};
 	16'hc711: ucode <= {16'hc712, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hc712: ucode <= {16'hc713, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
-	16'hc713: ucode <= {16'hc714, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hc714: ucode <= {16'hc715, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
-	16'hc715: ucode <= {16'hc716, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hc716: ucode <= {16'h0046, D_PC, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hc712: ucode <= {16'hc713, D_DATA, SWAP2, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hc713: ucode <= {16'hc714, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+	16'hc714: ucode <= {16'hc715, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hc715: ucode <= {16'hc716, D_DATA, OR, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hc716: ucode <= {16'hc717, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
+	16'hc717: ucode <= {16'hc718, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hc718: ucode <= {16'h0044, D_PC, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// RET Z
 	16'hc810: ucode <= {16'h0037, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
 	{4'b1xxx, 12'h37}: ucode <= {16'hc812, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
@@ -757,45 +764,51 @@ always @(posedge clock or negedge resetn) begin
 	16'hcc10: ucode <= {16'h0039, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
 	{4'b1xxx, 12'h39}: ucode <= {16'hcc12, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	{4'b0xxx, 12'h39}: ucode <= {16'h0047, D_PC, ADD, A_PC, B_2, 2'b00, CC_xxxx};
-	16'hcc12: ucode <= {16'hcc13, D_DATA, OR, A_PC, B_0, 2'b00, CC_xxxx};
+	16'hcc12: ucode <= {16'hcc13, D_TEMP, ADD, A_PC, B_2, 2'b00, CC_xxxx};
 	16'hcc13: ucode <= {16'hcc14, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hcc14: ucode <= {16'hcc15, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
-	16'hcc15: ucode <= {16'hcc16, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hcc16: ucode <= {16'hcc17, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
-	16'hcc17: ucode <= {16'hcc18, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hcc18: ucode <= {16'hcc19, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hcc14: ucode <= {16'hcc15, D_DATA, SWAP2, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hcc15: ucode <= {16'hcc16, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+	16'hcc16: ucode <= {16'hcc17, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hcc17: ucode <= {16'hcc18, D_DATA, OR, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hcc18: ucode <= {16'hcc19, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
 	16'hcc19: ucode <= {16'hcc1a, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hcc1a: ucode <= {16'hcc1b, D_TEMP, OR, A_D8, B_0, 2'b00, CC_xxxx};
-	16'hcc1b: ucode <= {16'hcc1c, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
-	16'hcc1c: ucode <= {16'hcc1d, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hcc1d: ucode <= {16'h0047, D_PC, OR, A_D16, B_0, 2'b00, CC_xxxx};
+	16'hcc1a: ucode <= {16'hcc1b, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hcc1b: ucode <= {16'hcc1c, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hcc1c: ucode <= {16'hcc1d, D_TEMP, OR, A_D8, B_0, 2'b00, CC_xxxx};
+	16'hcc1d: ucode <= {16'hcc1e, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hcc1e: ucode <= {16'hcc1f, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hcc1f: ucode <= {16'h0045, D_PC, OR, A_D16, B_0, 2'b00, CC_xxxx};
 	// CALL a16
-	16'hcd10: ucode <= {16'hcd11, D_DATA, OR, A_PC, B_0, 2'b00, CC_xxxx};
+	16'hcd10: ucode <= {16'hcd11, D_TEMP, ADD, A_PC, B_2, 2'b00, CC_xxxx};
 	16'hcd11: ucode <= {16'hcd12, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hcd12: ucode <= {16'hcd13, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
-	16'hcd13: ucode <= {16'hcd14, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hcd14: ucode <= {16'hcd15, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
-	16'hcd15: ucode <= {16'hcd16, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hcd16: ucode <= {16'hcd17, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hcd12: ucode <= {16'hcd13, D_DATA, SWAP2, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hcd13: ucode <= {16'hcd14, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+	16'hcd14: ucode <= {16'hcd15, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hcd15: ucode <= {16'hcd16, D_DATA, OR, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hcd16: ucode <= {16'hcd17, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
 	16'hcd17: ucode <= {16'hcd18, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hcd18: ucode <= {16'hcd19, D_TEMP, OR, A_D8, B_0, 2'b00, CC_xxxx};
-	16'hcd19: ucode <= {16'hcd1a, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
-	16'hcd1a: ucode <= {16'hcd1b, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hcd1b: ucode <= {16'h0049, D_PC, OR, A_D16, B_0, 2'b00, CC_xxxx};
+	16'hcd18: ucode <= {16'hcd19, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hcd19: ucode <= {16'hcd1a, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hcd1a: ucode <= {16'hcd1b, D_TEMP, OR, A_D8, B_0, 2'b00, CC_xxxx};
+	16'hcd1b: ucode <= {16'hcd1c, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hcd1c: ucode <= {16'hcd1d, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hcd1d: ucode <= {16'h0047, D_PC, OR, A_D16, B_0, 2'b00, CC_xxxx};
 	// ADC A,d8
 	16'hce10: ucode <= {16'hce11, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
 	16'hce11: ucode <= {16'hce12, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	16'hce12: ucode <= {16'h0042, D_A, ADC, A_A, B_D8, 2'b00, CC_Z0HC};
 	// RST 08H
-	16'hcf10: ucode <= {16'hcf11, D_DATA, SUB, A_PC, B_1, 2'b00, CC_xxxx};
+	16'hcf10: ucode <= {16'hcf11, D_TEMP, SUB, A_PC, B_1, 2'b00, CC_xxxx};
 	16'hcf11: ucode <= {16'hcf12, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hcf12: ucode <= {16'hcf13, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
-	16'hcf13: ucode <= {16'hcf14, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hcf14: ucode <= {16'hcf15, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
-	16'hcf15: ucode <= {16'hcf16, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hcf16: ucode <= {16'h0046, D_PC, OR, A_8, B_0, 2'b00, CC_xxxx};
+	16'hcf12: ucode <= {16'hcf13, D_DATA, SWAP2, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hcf13: ucode <= {16'hcf14, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+	16'hcf14: ucode <= {16'hcf15, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hcf15: ucode <= {16'hcf16, D_DATA, OR, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hcf16: ucode <= {16'hcf17, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
+	16'hcf17: ucode <= {16'hcf18, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hcf18: ucode <= {16'h0044, D_PC, OR, A_8, B_0, 2'b00, CC_xxxx};
 	// RET NC
-	16'hd010: ucode <= {16'h00310, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
+	16'hd010: ucode <= {16'h003a, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
 	{4'bxxx0, 12'h3a}: ucode <= {16'hd012, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	{4'bxxx1, 12'h3a}: ucode <= {16'h0043, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	16'hd012: ucode <= {16'hd013, D_SP, ADD, A_SP, B_1, 2'b10, CC_xxxx};
@@ -812,7 +825,7 @@ always @(posedge clock or negedge resetn) begin
 	16'hd114: ucode <= {16'hd115, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	16'hd115: ucode <= {16'h0043, D_DE, OR, A_D16, B_0, 2'b00, CC_xxxx};
 	// JP NC,a16
-	16'hd210: ucode <= {16'h00311, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
+	16'hd210: ucode <= {16'h003b, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
 	{4'bxxx0, 12'h3b}: ucode <= {16'hd212, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	{4'bxxx1, 12'h3b}: ucode <= {16'h0047, D_PC, ADD, A_PC, B_2, 2'b00, CC_xxxx};
 	16'hd212: ucode <= {16'hd213, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
@@ -824,42 +837,47 @@ always @(posedge clock or negedge resetn) begin
 	// NOP
 	16'hd310: ucode <= {16'h0000, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// CALL NC,a16
-	16'hd410: ucode <= {16'h00312, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
+	16'hd410: ucode <= {16'h003c, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
 	{4'bxxx0, 12'h3c}: ucode <= {16'hd412, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	{4'bxxx1, 12'h3c}: ucode <= {16'h0047, D_PC, ADD, A_PC, B_2, 2'b00, CC_xxxx};
-	16'hd412: ucode <= {16'hd413, D_DATA, OR, A_PC, B_0, 2'b00, CC_xxxx};
+	16'hd412: ucode <= {16'hd413, D_TEMP, ADD, A_PC, B_2, 2'b00, CC_xxxx};
 	16'hd413: ucode <= {16'hd414, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hd414: ucode <= {16'hd415, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
-	16'hd415: ucode <= {16'hd416, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hd416: ucode <= {16'hd417, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
-	16'hd417: ucode <= {16'hd418, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hd418: ucode <= {16'hd419, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hd414: ucode <= {16'hd415, D_DATA, SWAP2, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hd415: ucode <= {16'hd416, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+	16'hd416: ucode <= {16'hd417, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hd417: ucode <= {16'hd418, D_DATA, OR, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hd418: ucode <= {16'hd419, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
 	16'hd419: ucode <= {16'hd41a, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hd41a: ucode <= {16'hd41b, D_TEMP, OR, A_D8, B_0, 2'b00, CC_xxxx};
-	16'hd41b: ucode <= {16'hd41c, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
-	16'hd41c: ucode <= {16'hd41d, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hd41d: ucode <= {16'h0047, D_PC, OR, A_D16, B_0, 2'b00, CC_xxxx};
+	16'hd41a: ucode <= {16'hd41b, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hd41b: ucode <= {16'hd41c, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hd41c: ucode <= {16'hd41d, D_TEMP, OR, A_D8, B_0, 2'b00, CC_xxxx};
+	16'hd41d: ucode <= {16'hd41e, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hd41e: ucode <= {16'hd41f, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hd41f: ucode <= {16'h0045, D_PC, OR, A_D16, B_0, 2'b00, CC_xxxx};
 	// PUSH DE
-	16'hd510: ucode <= {16'hd511, D_DATA, OR, A_DE, B_0, 2'b00, CC_xxxx};
-	16'hd511: ucode <= {16'hd512, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hd512: ucode <= {16'hd513, D_SP, ADD, A_SP, B_1, 2'b10, CC_xxxx};
+	16'hd510: ucode <= {16'hd511, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
+	16'hd511: ucode <= {16'hd512, D_DATA, SWAP2, A_DE, B_0, 2'b00, CC_xxxx};
+	16'hd512: ucode <= {16'hd513, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
 	16'hd513: ucode <= {16'hd514, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hd514: ucode <= {16'hd515, D_0, OR, A_SP, B_0, 2'b10, CC_xxxx};
-	16'hd515: ucode <= {16'h0047, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hd514: ucode <= {16'hd515, D_DATA, OR, A_DE, B_0, 2'b00, CC_xxxx};
+	16'hd515: ucode <= {16'hd516, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
+	16'hd516: ucode <= {16'h0046, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// SUB d8
 	16'hd610: ucode <= {16'hd611, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
 	16'hd611: ucode <= {16'hd612, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	16'hd612: ucode <= {16'h0042, D_A, SUB, A_A, B_D8, 2'b00, CC_Z1HC};
 	// RST 10H
-	16'hd710: ucode <= {16'hd711, D_DATA, SUB, A_PC, B_1, 2'b00, CC_xxxx};
+	16'hd710: ucode <= {16'hd711, D_TEMP, SUB, A_PC, B_1, 2'b00, CC_xxxx};
 	16'hd711: ucode <= {16'hd712, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hd712: ucode <= {16'hd713, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
-	16'hd713: ucode <= {16'hd714, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hd714: ucode <= {16'hd715, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
-	16'hd715: ucode <= {16'hd716, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hd716: ucode <= {16'h0046, D_PC, OR, A_10, B_0, 2'b00, CC_xxxx};
+	16'hd712: ucode <= {16'hd713, D_DATA, SWAP2, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hd713: ucode <= {16'hd714, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+	16'hd714: ucode <= {16'hd715, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hd715: ucode <= {16'hd716, D_DATA, OR, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hd716: ucode <= {16'hd717, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
+	16'hd717: ucode <= {16'hd718, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hd718: ucode <= {16'h0044, D_PC, OR, A_10, B_0, 2'b00, CC_xxxx};
 	// RET C
-	16'hd810: ucode <= {16'h00313, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
+	16'hd810: ucode <= {16'h003d, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
 	{4'bxxx1, 12'h3d}: ucode <= {16'hd812, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	{4'bxxx0, 12'h3d}: ucode <= {16'h0043, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	16'hd812: ucode <= {16'hd813, D_SP, ADD, A_SP, B_1, 2'b10, CC_xxxx};
@@ -877,7 +895,7 @@ always @(posedge clock or negedge resetn) begin
 	16'hd915: ucode <= {16'hd916, D_PC, OR, A_D16, B_0, 2'b00, CC_xxxx};
 	16'hd916: ucode <= {16'h0046, D_IE, OR, A_1, B_0, 2'b00, CC_xxxx};
 	// JP C,a16
-	16'hda10: ucode <= {16'h00314, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
+	16'hda10: ucode <= {16'h003e, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
 	{4'bxxx1, 12'h3e}: ucode <= {16'hda12, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	{4'bxxx0, 12'h3e}: ucode <= {16'h0047, D_PC, ADD, A_PC, B_2, 2'b00, CC_xxxx};
 	16'hda12: ucode <= {16'hda13, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
@@ -889,21 +907,23 @@ always @(posedge clock or negedge resetn) begin
 	// NOP
 	16'hdb10: ucode <= {16'h0000, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// CALL C,a16
-	16'hdc10: ucode <= {16'h00315, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
+	16'hdc10: ucode <= {16'h003f, D_UC, OR, A_UC, B_F, 2'b00, CC_xxxx};
 	{4'bxxx1, 12'h3f}: ucode <= {16'hdc12, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	{4'bxxx0, 12'h3f}: ucode <= {16'h0047, D_PC, ADD, A_PC, B_2, 2'b00, CC_xxxx};
-	16'hdc12: ucode <= {16'hdc13, D_DATA, OR, A_PC, B_0, 2'b00, CC_xxxx};
+	16'hdc12: ucode <= {16'hdc13, D_TEMP, ADD, A_PC, B_2, 2'b00, CC_xxxx};
 	16'hdc13: ucode <= {16'hdc14, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hdc14: ucode <= {16'hdc15, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
-	16'hdc15: ucode <= {16'hdc16, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hdc16: ucode <= {16'hdc17, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
-	16'hdc17: ucode <= {16'hdc18, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hdc18: ucode <= {16'hdc19, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hdc14: ucode <= {16'hdc15, D_DATA, SWAP2, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hdc15: ucode <= {16'hdc16, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+	16'hdc16: ucode <= {16'hdc17, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hdc17: ucode <= {16'hdc18, D_DATA, OR, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hdc18: ucode <= {16'hdc19, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
 	16'hdc19: ucode <= {16'hdc1a, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hdc1a: ucode <= {16'hdc1b, D_TEMP, OR, A_D8, B_0, 2'b00, CC_xxxx};
-	16'hdc1b: ucode <= {16'hdc1c, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
-	16'hdc1c: ucode <= {16'hdc1d, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hdc1d: ucode <= {16'h0047, D_PC, OR, A_D16, B_0, 2'b00, CC_xxxx};
+	16'hdc1a: ucode <= {16'hdc1b, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hdc1b: ucode <= {16'hdc1c, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hdc1c: ucode <= {16'hdc1d, D_TEMP, OR, A_D8, B_0, 2'b00, CC_xxxx};
+	16'hdc1d: ucode <= {16'hdc1e, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
+	16'hdc1e: ucode <= {16'hdc1f, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hdc1f: ucode <= {16'h0045, D_PC, OR, A_D16, B_0, 2'b00, CC_xxxx};
 	// NOP
 	16'hdd10: ucode <= {16'h0000, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// SBC A,d8
@@ -911,13 +931,15 @@ always @(posedge clock or negedge resetn) begin
 	16'hde11: ucode <= {16'hde12, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	16'hde12: ucode <= {16'h0042, D_A, SBC, A_A, B_D8, 2'b00, CC_Z1HC};
 	// RST 18H
-	16'hdf10: ucode <= {16'hdf11, D_DATA, SUB, A_PC, B_1, 2'b00, CC_xxxx};
+	16'hdf10: ucode <= {16'hdf11, D_TEMP, SUB, A_PC, B_1, 2'b00, CC_xxxx};
 	16'hdf11: ucode <= {16'hdf12, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hdf12: ucode <= {16'hdf13, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
-	16'hdf13: ucode <= {16'hdf14, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hdf14: ucode <= {16'hdf15, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
-	16'hdf15: ucode <= {16'hdf16, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hdf16: ucode <= {16'h0046, D_PC, OR, A_18, B_0, 2'b00, CC_xxxx};
+	16'hdf12: ucode <= {16'hdf13, D_DATA, SWAP2, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hdf13: ucode <= {16'hdf14, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+	16'hdf14: ucode <= {16'hdf15, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hdf15: ucode <= {16'hdf16, D_DATA, OR, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hdf16: ucode <= {16'hdf17, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
+	16'hdf17: ucode <= {16'hdf18, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hdf18: ucode <= {16'h0044, D_PC, OR, A_18, B_0, 2'b00, CC_xxxx};
 	// LDH (a8),A
 	16'he010: ucode <= {16'he011, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
 	16'he011: ucode <= {16'he012, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
@@ -942,24 +964,27 @@ always @(posedge clock or negedge resetn) begin
 	// NOP
 	16'he410: ucode <= {16'h0000, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// PUSH HL
-	16'he510: ucode <= {16'he511, D_DATA, OR, A_HL, B_0, 2'b00, CC_xxxx};
-	16'he511: ucode <= {16'he512, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'he512: ucode <= {16'he513, D_SP, ADD, A_SP, B_1, 2'b10, CC_xxxx};
+	16'he510: ucode <= {16'he511, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
+	16'he511: ucode <= {16'he512, D_DATA, SWAP2, A_HL, B_0, 2'b00, CC_xxxx};
+	16'he512: ucode <= {16'he513, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
 	16'he513: ucode <= {16'he514, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'he514: ucode <= {16'he515, D_0, OR, A_SP, B_0, 2'b10, CC_xxxx};
-	16'he515: ucode <= {16'h0047, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'he514: ucode <= {16'he515, D_DATA, OR, A_HL, B_0, 2'b00, CC_xxxx};
+	16'he515: ucode <= {16'he516, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
+	16'he516: ucode <= {16'h0046, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// AND d8
 	16'he610: ucode <= {16'he611, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
 	16'he611: ucode <= {16'he612, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	16'he612: ucode <= {16'h0042, D_A, AND, A_A, B_D8, 2'b00, CC_Z010};
 	// RST 20H
-	16'he710: ucode <= {16'he711, D_DATA, SUB, A_PC, B_1, 2'b00, CC_xxxx};
+	16'he710: ucode <= {16'he711, D_TEMP, SUB, A_PC, B_1, 2'b00, CC_xxxx};
 	16'he711: ucode <= {16'he712, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'he712: ucode <= {16'he713, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
-	16'he713: ucode <= {16'he714, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'he714: ucode <= {16'he715, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
-	16'he715: ucode <= {16'he716, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'he716: ucode <= {16'h0046, D_PC, OR, A_20, B_0, 2'b00, CC_xxxx};
+	16'he712: ucode <= {16'he713, D_DATA, SWAP2, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'he713: ucode <= {16'he714, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+	16'he714: ucode <= {16'he715, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'he715: ucode <= {16'he716, D_DATA, OR, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'he716: ucode <= {16'he717, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
+	16'he717: ucode <= {16'he718, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'he718: ucode <= {16'h0044, D_PC, OR, A_20, B_0, 2'b00, CC_xxxx};
 	// ADD SP,r8
 	16'he810: ucode <= {16'he811, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
 	16'he811: ucode <= {16'he812, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
@@ -985,13 +1010,15 @@ always @(posedge clock or negedge resetn) begin
 	16'hee11: ucode <= {16'hee12, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	16'hee12: ucode <= {16'h0042, D_A, XOR, A_A, B_D8, 2'b00, CC_Z000};
 	// RST 28H
-	16'hef10: ucode <= {16'hef11, D_DATA, SUB, A_PC, B_1, 2'b00, CC_xxxx};
+	16'hef10: ucode <= {16'hef11, D_TEMP, SUB, A_PC, B_1, 2'b00, CC_xxxx};
 	16'hef11: ucode <= {16'hef12, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hef12: ucode <= {16'hef13, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
-	16'hef13: ucode <= {16'hef14, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hef14: ucode <= {16'hef15, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
-	16'hef15: ucode <= {16'hef16, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hef16: ucode <= {16'h0046, D_PC, OR, A_28, B_0, 2'b00, CC_xxxx};
+	16'hef12: ucode <= {16'hef13, D_DATA, SWAP2, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hef13: ucode <= {16'hef14, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+	16'hef14: ucode <= {16'hef15, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hef15: ucode <= {16'hef16, D_DATA, OR, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hef16: ucode <= {16'hef17, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
+	16'hef17: ucode <= {16'hef18, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hef18: ucode <= {16'h0044, D_PC, OR, A_28, B_0, 2'b00, CC_xxxx};
 	// LDH A,(a8)
 	16'hf010: ucode <= {16'hf011, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
 	16'hf011: ucode <= {16'hf012, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
@@ -1016,24 +1043,27 @@ always @(posedge clock or negedge resetn) begin
 	// NOP
 	16'hf410: ucode <= {16'h0000, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// PUSH AF
-	16'hf510: ucode <= {16'hf511, D_DATA, OR, A_AF, B_0, 2'b00, CC_xxxx};
-	16'hf511: ucode <= {16'hf512, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hf512: ucode <= {16'hf513, D_SP, ADD, A_SP, B_1, 2'b10, CC_xxxx};
+	16'hf510: ucode <= {16'hf511, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
+	16'hf511: ucode <= {16'hf512, D_DATA, SWAP2, A_AF, B_0, 2'b00, CC_xxxx};
+	16'hf512: ucode <= {16'hf513, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
 	16'hf513: ucode <= {16'hf514, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hf514: ucode <= {16'hf515, D_0, OR, A_SP, B_0, 2'b10, CC_xxxx};
-	16'hf515: ucode <= {16'h0047, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hf514: ucode <= {16'hf515, D_DATA, OR, A_AF, B_0, 2'b00, CC_xxxx};
+	16'hf515: ucode <= {16'hf516, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
+	16'hf516: ucode <= {16'h0046, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// OR d8
 	16'hf610: ucode <= {16'hf611, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
 	16'hf611: ucode <= {16'hf612, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	16'hf612: ucode <= {16'h0042, D_A, OR, A_A, B_D8, 2'b00, CC_Z000};
 	// RST 30H
-	16'hf710: ucode <= {16'hf711, D_DATA, SUB, A_PC, B_1, 2'b00, CC_xxxx};
+	16'hf710: ucode <= {16'hf711, D_TEMP, SUB, A_PC, B_1, 2'b00, CC_xxxx};
 	16'hf711: ucode <= {16'hf712, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hf712: ucode <= {16'hf713, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
-	16'hf713: ucode <= {16'hf714, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hf714: ucode <= {16'hf715, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
-	16'hf715: ucode <= {16'hf716, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hf716: ucode <= {16'h0046, D_PC, OR, A_30, B_0, 2'b00, CC_xxxx};
+	16'hf712: ucode <= {16'hf713, D_DATA, SWAP2, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hf713: ucode <= {16'hf714, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+	16'hf714: ucode <= {16'hf715, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hf715: ucode <= {16'hf716, D_DATA, OR, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hf716: ucode <= {16'hf717, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
+	16'hf717: ucode <= {16'hf718, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hf718: ucode <= {16'h0044, D_PC, OR, A_30, B_0, 2'b00, CC_xxxx};
 	// LD HL,SP+r8
 	16'hf810: ucode <= {16'hf811, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
 	16'hf811: ucode <= {16'hf812, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
@@ -1060,13 +1090,15 @@ always @(posedge clock or negedge resetn) begin
 	16'hfe11: ucode <= {16'hfe12, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	16'hfe12: ucode <= {16'h0042, D_0, SUB, A_A, B_D8, 2'b00, CC_Z1HC};
 	// RST 38H
-	16'hff10: ucode <= {16'hff11, D_DATA, SUB, A_PC, B_1, 2'b00, CC_xxxx};
+	16'hff10: ucode <= {16'hff11, D_TEMP, SUB, A_PC, B_1, 2'b00, CC_xxxx};
 	16'hff11: ucode <= {16'hff12, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
-	16'hff12: ucode <= {16'hff13, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
-	16'hff13: ucode <= {16'hff14, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hff14: ucode <= {16'hff15, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
-	16'hff15: ucode <= {16'hff16, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'hff16: ucode <= {16'h0046, D_PC, OR, A_38, B_0, 2'b00, CC_xxxx};
+	16'hff12: ucode <= {16'hff13, D_DATA, SWAP2, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hff13: ucode <= {16'hff14, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+	16'hff14: ucode <= {16'hff15, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hff15: ucode <= {16'hff16, D_DATA, OR, A_TEMP, B_0, 2'b00, CC_xxxx};
+	16'hff16: ucode <= {16'hff17, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
+	16'hff17: ucode <= {16'hff18, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+	16'hff18: ucode <= {16'h0044, D_PC, OR, A_38, B_0, 2'b00, CC_xxxx};
 
 
 

@@ -1,4 +1,4 @@
-module lr35902(clock4, resetn, address, indata, outdata, load, store, du, df);
+module lr35902(clock4, resetn, address, indata, outdata, load, store, du, df, daf, dbc, dde, dhl, dsp, dpc);
 
 input clock4;
 input resetn;
@@ -12,6 +12,12 @@ output store;
 
 output [15:0] du = u;
 output [3:0] df = f;
+output [15:0] daf = {a,f,4'h0};
+output [15:0] dbc = {b,c};
+output [15:0] dde = {d,e};
+output [15:0] dhl = {h,l};
+output [15:0] dsp = sp;
+output [15:0] dpc = pc;
 
 
 reg [15:0] u;
@@ -161,6 +167,7 @@ always @(posedge clock4 or negedge resetn) begin
     
         case (uc_cc)
         CC_Z0Hx: f <= {cc_z, 1'b0, cc_h, f[0]};
+        CC_Z1Hx: f <= {cc_z, 1'b1, cc_h, f[0]};
         CC_000C: f <= {1'b0, 1'b0, 1'b0, cc_c};
         CC_x0HC: f <= {f[3], 1'b0, cc_h, cc_c};
         CC_Zx0C: f <= {cc_z, f[2], 1'b0, cc_c};

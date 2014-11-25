@@ -34,6 +34,7 @@ always @(*) begin
     SRL:     d = {8'h00, 1'b0, a[7:1]};
                   
     SWAP:    d = {8'h00, a[3:0], a[7:4]};
+    SWAP2:   d = {a[7:0], a[15:8]};
     DAA:     d = 0; // ???
     default: d = 0;
     endcase
@@ -90,6 +91,7 @@ parameter SLA       = 5'h0d;
 parameter SRA       = 5'h0e;
 parameter SRL       = 5'h0f;
 parameter SWAP      = 5'h10;
-parameter DAA       = 5'h11;
+parameter SWAP2     = 5'h11;
+parameter DAA       = 5'h12;
 
 endmodule
