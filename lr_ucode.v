@@ -112,7 +112,7 @@ parameter CC_Zx0C   = 5'h05;
 parameter CC_x11x   = 5'h06;
 parameter CC_x001   = 5'h07;
 parameter CC_Z0HC   = 5'h08;
-parameter CC_x00C   = 5'h09;
+parameter CC_x00x   = 5'h09;
 parameter CC_Z1HC   = 5'h0a;
 parameter CC_Z010   = 5'h0b;
 parameter CC_Z000   = 5'h0c;
@@ -357,7 +357,7 @@ always @(posedge clock or negedge resetn) begin
 	16'h3e11: ucode <= {16'h3e12, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	16'h3e12: ucode <= {16'h0042, D_A, OR, A_D8, B_0, 2'b00, CC_xxxx};
 	// CCF
-	16'h3f10: ucode <= {16'h0000, D_0, OR, A_0, B_0, 2'b00, CC_x00C};
+	16'h3f10: ucode <= {16'h0000, D_AF, XOR, A_AF, B_10, 2'b00, CC_x00x};
 	// LD B,B
 	16'h4010: ucode <= {16'h0000, D_B, OR, A_B, B_0, 2'b00, CC_xxxx};
 	// LD B,C
@@ -1101,10 +1101,8 @@ always @(posedge clock or negedge resetn) begin
 	16'hff18: ucode <= {16'h0044, D_PC, OR, A_38, B_0, 2'b00, CC_xxxx};
 
 
-
-
     ////// BEGIN GENERATED EXTENSIONS //////
-		// RLC B
+	// RLC B
 	16'h0020: ucode <= {16'h0000, D_B, RLC, A_B, B_0, 2'b00, CC_Z00C};
 	// RLC C
 	16'h0120: ucode <= {16'h0000, D_C, RLC, A_C, B_0, 2'b00, CC_Z00C};
@@ -1205,25 +1203,25 @@ always @(posedge clock or negedge resetn) begin
 	// SLA A
 	16'h2720: ucode <= {16'h0000, D_A, SLA, A_A, B_0, 2'b00, CC_Z00C};
 	// SRA B
-	16'h2820: ucode <= {16'h0000, D_B, SRA, A_B, B_0, 2'b00, CC_Z000};
+	16'h2820: ucode <= {16'h0000, D_B, SRA, A_B, B_0, 2'b00, CC_Z00C};
 	// SRA C
-	16'h2920: ucode <= {16'h0000, D_C, SRA, A_C, B_0, 2'b00, CC_Z000};
+	16'h2920: ucode <= {16'h0000, D_C, SRA, A_C, B_0, 2'b00, CC_Z00C};
 	// SRA D
-	16'h2a20: ucode <= {16'h0000, D_D, SRA, A_D, B_0, 2'b00, CC_Z000};
+	16'h2a20: ucode <= {16'h0000, D_D, SRA, A_D, B_0, 2'b00, CC_Z00C};
 	// SRA E
-	16'h2b20: ucode <= {16'h0000, D_E, SRA, A_E, B_0, 2'b00, CC_Z000};
+	16'h2b20: ucode <= {16'h0000, D_E, SRA, A_E, B_0, 2'b00, CC_Z00C};
 	// SRA H
-	16'h2c20: ucode <= {16'h0000, D_H, SRA, A_H, B_0, 2'b00, CC_Z000};
+	16'h2c20: ucode <= {16'h0000, D_H, SRA, A_H, B_0, 2'b00, CC_Z00C};
 	// SRA L
-	16'h2d20: ucode <= {16'h0000, D_L, SRA, A_L, B_0, 2'b00, CC_Z000};
+	16'h2d20: ucode <= {16'h0000, D_L, SRA, A_L, B_0, 2'b00, CC_Z00C};
 	// SRA (HL)
 	16'h2e20: ucode <= {16'h2e21, D_0, OR, A_HL, B_0, 2'b10, CC_xxxx};
 	16'h2e21: ucode <= {16'h2e22, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
-	16'h2e22: ucode <= {16'h2e23, D_DATA, SRA, A_D8, B_0, 2'b00, CC_Z000};
+	16'h2e22: ucode <= {16'h2e23, D_DATA, SRA, A_D8, B_0, 2'b00, CC_Z00C};
 	16'h2e23: ucode <= {16'h2e24, D_0, OR, A_HL, B_0, 2'b01, CC_xxxx};
 	16'h2e24: ucode <= {16'h0044, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// SRA A
-	16'h2f20: ucode <= {16'h0000, D_A, SRA, A_A, B_0, 2'b00, CC_Z000};
+	16'h2f20: ucode <= {16'h0000, D_A, SRA, A_A, B_0, 2'b00, CC_Z00C};
 	// SWAP B
 	16'h3020: ucode <= {16'h0000, D_B, SWAP, A_B, B_0, 2'b00, CC_Z000};
 	// SWAP C
@@ -1728,6 +1726,7 @@ always @(posedge clock or negedge resetn) begin
 	16'hfe24: ucode <= {16'h0044, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// SET 7,A
 	16'hff20: ucode <= {16'h0000, D_A, OR, A_A, B_80, 2'b00, CC_xxxx};
+
     
     // Delays
     16'h004x: ucode <= {u == 16'h0041 ? 16'h0000 : {u[15:4], u[3:0] - 4'h1}, 
