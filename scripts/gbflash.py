@@ -9,7 +9,7 @@ def main():
     start = int(sys.argv[1], 16)
     count = int(sys.argv[2], 16)
 
-    with open(sys.argv[3]) as input:
+    with open(sys.argv[3], 'rb') as input:
         data = input.read()[:count]
 
         with open(sys.argv[4], 'wb') as dev:
