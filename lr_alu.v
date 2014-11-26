@@ -23,12 +23,12 @@ always @(*) begin
     ADC:     d = a + b + c;
     ADD2:    d = a + b;
     SUB:     d = a - b;
-    SBC:     d = a - b + c;
+    SBC:     d = a - b - c;
                   
     RLC:     d = {8'h00, a[6:0], a[7]};
     RL:      d = {8'h00, a[6:0], c};
     RRC:     d = {8'h00, a[0], a[7:1]};
-    RR:      d = {8'h00, c,    a[7:1]};
+    RR:      d = {8'h00, c, a[7:1]};
     SLA:     d = {8'h00, a[6:0], 1'b0};
     SRA:     d = {8'h00, a[7], a[7:1]};
     SRL:     d = {8'h00, 1'b0, a[7:1]};
@@ -57,10 +57,10 @@ always @(*) begin
                    cspace = ({1'b0, a[7:0]} + {1'b0, b[7:0]} + c);  nc = cspace[8];  end
     ADD2:    begin hspace = ({1'b0, a[11:0]} + {1'b0, b[11:0]});    nh = hspace[12];
                    cspace = ({1'b0, a[15:0]} + {1'b0, b[15:0]});    nc = cspace[16]; end
-    SUB:     begin hspace = ({1'b0, a[3:0]} + {1'b0, -b[3:0]});     nh = hspace[4];
-                   cspace = ({1'b0, a[7:0]} + {1'b0, -b[7:0]});     nc = cspace[8];  end
-    SBC:     begin hspace = ({1'b0, a[3:0]} + {1'b0, -b[3:0]} + c); nh = hspace[4];
-                   cspace = ({1'b0, a[7:0]} + {1'b0, -b[7:0]} + c); nc = cspace[8];  end
+    SUB:     begin hspace = ({1'b0, a[3:0]} - {1'b0, b[3:0]});      nh = hspace[4];
+                   cspace = ({1'b0, a[7:0]} - {1'b0, b[7:0]});      nc = cspace[8];  end
+    SBC:     begin hspace = ({1'b0, a[3:0]} - {1'b0, b[3:0]} - c);  nh = hspace[4];
+                   cspace = ({1'b0, a[7:0]} - {1'b0, b[7:0]} - c);  nc = cspace[8];  end
                   
     RLC:     nc = a[7];
     RL:      nc = a[7];
