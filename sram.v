@@ -1,10 +1,10 @@
 module sram(
-    clock4, clock115200, resetn,
-    address, indata, outdata, load, store,
-    prog, 
+    clock4, clock115200, clock460800, resetn,
+    address, indata, outdata, load, store, prog, 
     
     //////////// Uart to USB //////////
 	UART_RX,
+    UART_TX,
     
     //////////// SRAM //////////
 	SRAM_A,
@@ -18,17 +18,19 @@ module sram(
 
 input clock4;
 input clock115200;
+input clock460800;
 input resetn;
 
 input [15:0] address;
 input [7:0] indata;
-output [7:0] outdata;
+output reg [7:0] outdata;
 input load;
 input store;
 input prog;
 
 //////////// Uart to USB //////////
 input UART_RX;
+output UART_TX;
 
 //////////// SRAM //////////
 output [17:0] SRAM_A = ram_address[18:1];
@@ -39,6 +41,7 @@ output SRAM_LB_n = ~ram_bytes[0];
 output SRAM_OE_n = ~ram_load;
 output SRAM_WE_n = ~ram_store;
 
+
 wire [15:0] ram_bus = ram_store ? {ram_outdata, ram_outdata} : 16'hzzzz;
 wire [1:0] ram_bytes = ram_address[0] ? 2'b01 : 2'b10;
 
@@ -47,14 +50,15 @@ reg [7:0] ram_outdata;
 reg ram_load;
 reg ram_store;
 
-assign outdata = ram_address[0] ? SRAM_D[7:0] : SRAM_D[15:8];
+wire [7:0] ram_indata = ram_address[0] ? SRAM_D[7:0] : SRAM_D[15:8];
 
 
 wire [7:0] uart_data;
 wire uart_recv;
 reg uart_recv_ack;
 
-uartrx comm(clock115200, resetn, uart_data, uart_recv, UART_RX);
+uartrx comm_uart (clock460800, resetn, uart_data, uart_recv, UART_RX);
+uarttx check_uart (clock115200, resetn, uart_data, uart_recv, , UART_TX);
 
 
 reg [18:0] flash_address;
@@ -67,6 +71,9 @@ always @(posedge clock4 or negedge resetn) begin
         ram_outdata <= 0;
         ram_load <= 0;
         ram_store <= 0;
+        outdata <= 0;
+
+        flash_state <= 0;
         uart_recv_ack <= 0;
     end else if (prog) begin
         uart_recv_ack <= uart_recv;
@@ -101,6 +108,10 @@ always @(posedge clock4 or negedge resetn) begin
         ram_outdata <= indata;
         ram_load <= load;
         ram_store <= store;
+        outdata <= ram_indata;
+        
+        flash_state <= 0;
+        uart_recv_ack <= 0;
     end 
 end
 

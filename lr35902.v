@@ -137,7 +137,7 @@ always @(posedge clock4 or negedge resetn) begin
     if (!resetn) begin
         pc <= 16'h0100;
         sp <= 16'hfffe;
-        a <= 8'h11;
+        a <= 8'h01; // 8'h11 for gbc
         f <= 4'hb;
         b <= 8'h00;
         c <= 8'h13;
@@ -166,21 +166,21 @@ always @(posedge clock4 or negedge resetn) begin
         endcase
     
         case (uc_cc)
-        CC_Z0Hx: f <= {cc_z, 1'b0, cc_h, f[0]};
-        CC_Z1Hx: f <= {cc_z, 1'b1, cc_h, f[0]};
-        CC_000C: f <= {1'b0, 1'b0, 1'b0, cc_c};
-        CC_x0HC: f <= {f[3], 1'b0, cc_h, cc_c};
-        CC_Zx0C: f <= {cc_z, f[2], 1'b0, cc_c};
-        CC_x11x: f <= {f[3], 1'b1, 1'b1, f[0]};
-        CC_x001: f <= {f[3], 1'b0, 1'b0, 1'b1};
-        CC_Z0HC: f <= {cc_z, 1'b0, cc_h, cc_c};
-        CC_x00C: f <= {f[3], 1'b0, 1'b0, cc_c};
-        CC_Z1HC: f <= {cc_z, 1'b1, cc_h, cc_c};
-        CC_Z010: f <= {cc_z, 1'b0, 1'b1, 1'b0};
-        CC_Z000: f <= {cc_z, 1'b0, 1'b0, 1'b0};
-        CC_00HC: f <= {1'b0, 1'b0, cc_h, cc_c};
-        CC_Z00C: f <= {cc_z, 1'b0, 1'b0, cc_c};
-        CC_Z01x: f <= {cc_z, 1'b0, 1'b1, f[0]};
+        CC_Z0Hx: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= cc_h;               end
+        CC_Z1Hx: begin f[3] <= cc_z; f[2] <= 1'b1; f[1] <= cc_h;               end
+        CC_000C: begin f[3] <= 1'b0; f[2] <= 1'b0; f[1] <= 1'b0; f[0] <= cc_c; end
+        CC_x0HC: begin               f[2] <= 1'b0; f[1] <= cc_h; f[0] <= cc_c; end
+        CC_Zx0C: begin f[3] <= cc_z;               f[1] <= 1'b0; f[0] <= cc_c; end
+        CC_x11x: begin               f[2] <= 1'b1; f[1] <= 1'b1;               end
+        CC_x001: begin               f[2] <= 1'b0; f[1] <= 1'b0; f[0] <= 1'b1; end
+        CC_Z0HC: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= cc_h; f[0] <= cc_c; end
+        CC_x00x: begin               f[2] <= 1'b0; f[1] <= 1'b0;               end
+        CC_Z1HC: begin f[3] <= cc_z; f[2] <= 1'b1; f[1] <= cc_h; f[0] <= cc_c; end
+        CC_Z010: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= 1'b1; f[0] <= 1'b0; end
+        CC_Z000: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= 1'b0; f[0] <= 1'b0; end
+        CC_00HC: begin f[3] <= 1'b0; f[2] <= 1'b0; f[1] <= cc_h; f[0] <= cc_c; end
+        CC_Z00C: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= 1'b0; f[0] <= cc_c; end
+        CC_Z01x: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= 1'b1;               end
         endcase
     end
 end
@@ -275,7 +275,7 @@ parameter CC_Zx0C   = 5'h05;
 parameter CC_x11x   = 5'h06;
 parameter CC_x001   = 5'h07;
 parameter CC_Z0HC   = 5'h08;
-parameter CC_x00C   = 5'h09;
+parameter CC_x00x   = 5'h09;
 parameter CC_Z1HC   = 5'h0a;
 parameter CC_Z010   = 5'h0b;
 parameter CC_Z000   = 5'h0c;

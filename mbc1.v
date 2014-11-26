@@ -1,9 +1,10 @@
 module mbc1(
-    clock4, clock115200, resetn,
+    clock4, clock115200, clock460800, resetn,
     address, indata, outdata, load, store, prog,
     
     //////////// Uart to USB //////////
 	UART_RX,
+    UART_TX,
     
     //////////// SRAM //////////
 	SRAM_A,
@@ -17,6 +18,7 @@ module mbc1(
 
 input clock4;
 input clock115200;
+input clock460800;
 input resetn;
 
 input [15:0] address;
@@ -24,10 +26,11 @@ input [7:0] indata;
 output [7:0] outdata = rom_data;
 input load;
 input store;
-wire prog;
+input prog;
 
 //////////// Uart to USB //////////
 input UART_RX;
+output UART_TX;
 
 //////////// SRAM //////////
 output [17:0] SRAM_A;
@@ -42,13 +45,13 @@ output SRAM_WE_n;
 reg [15:0] rom_address;
 wire [7:0] rom_data;
 
-mbc1rom rom(rom_address, clock4, rom_data);
 sram cart_rom(
-    clock4, clock115200, resetn,
-    rom_address, , rom_data, load, store, prog, 
+    clock4, clock115200, clock460800, resetn,
+    rom_address, , rom_data, load, , prog, 
     
     //////////// Uart to USB //////////
 	UART_RX,
+    UART_TX,
     
     //////////// SRAM //////////
 	SRAM_A,
