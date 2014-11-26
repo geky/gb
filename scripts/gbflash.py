@@ -10,30 +10,24 @@ def main():
     count = int(sys.argv[2], 16)
 
     with open(sys.argv[3]) as input:
-        data = input.read()
+        data = input.read()[:count]
 
-        with open(sys.argv[4], 'r+') as output:
-            putword(output, start)
-            putword(output, count)
+        with open(sys.argv[4], 'wb') as dev:
+            putword(dev, start)
+            putword(dev, count)
 
-            for x,_ in zip(data, xrange(count)):
-                put(output, x)
-            
+            for x in data:
+                put(dev, x)
 
 
-def put(output, x):
-    output.write(x)
-    c = output.read(1)
+def put(dev, x):
+    dev.write(x)
 
-    if c != x:
-        print "Error detected"
-        time.sleep(0.5)
-
-def putword(output, x):
-    put(output, chr(0xff & (x >> 24)))
-    put(output, chr(0xff & (x >> 16)))
-    put(output, chr(0xff & (x >>  8)))
-    put(output, chr(0xff & (x      )))
+def putword(dev, x):
+    put(dev, chr(0xff & (x >> 24)))
+    put(dev, chr(0xff & (x >> 16)))
+    put(dev, chr(0xff & (x >>  8)))
+    put(dev, chr(0xff & (x      )))
 
 
 if __name__ == "__main__":
