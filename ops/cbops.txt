@@ -120,28 +120,28 @@ SLA A
 Z 0 0 C 
 SRA B
 2  8
-Z 0 0 0 
+Z 0 0 C
 SRA C
 2  8
-Z 0 0 0 
+Z 0 0 C 
 SRA D
 2  8
-Z 0 0 0 
+Z 0 0 C 
 SRA E
 2  8
-Z 0 0 0 
+Z 0 0 C 
 SRA H
 2  8
-Z 0 0 0 
+Z 0 0 C 
 SRA L
 2  8
-Z 0 0 0 
+Z 0 0 C 
 SRA (HL)
 2  16
-Z 0 0 0 
+Z 0 0 C 
 SRA A
 2  8
-Z 0 0 0 
+Z 0 0 C 
 SWAP B
 2  8
 Z 0 0 0 
