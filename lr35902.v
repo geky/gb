@@ -1,4 +1,8 @@
-module lr35902(clock4, resetn, address, indata, outdata, load, store, du, df, daf, dbc, dde, dhl, dsp, dpc);
+module lr35902(
+    clock4, resetn, 
+    address, indata, outdata, load, store, 
+    du, df, daf, dbc, dde, dhl, dsp, dpc
+);
 
 input clock4;
 input resetn;
@@ -54,14 +58,13 @@ reg [15:0] pc;
 reg [15:0] temp;
 reg ie;
 
-wire cc_z;
-wire cc_h;
-wire cc_c;
+
 reg [15:0] bus_a;
 reg [15:0] bus_b;
 wire [15:0] bus_d;
+wire [3:0] nf;
 
-lr_alu alu(bus_d, uc_op, bus_a, bus_b, f[0], cc_z, cc_h, cc_c);
+lr_alu alu(bus_d, uc_op, bus_a, bus_b, f, nf);
 
 
 always @(*) begin
@@ -166,21 +169,21 @@ always @(posedge clock4 or negedge resetn) begin
         endcase
     
         case (uc_cc)
-        CC_Z0Hx: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= cc_h;               end
-        CC_Z1Hx: begin f[3] <= cc_z; f[2] <= 1'b1; f[1] <= cc_h;               end
-        CC_000C: begin f[3] <= 1'b0; f[2] <= 1'b0; f[1] <= 1'b0; f[0] <= cc_c; end
-        CC_x0HC: begin               f[2] <= 1'b0; f[1] <= cc_h; f[0] <= cc_c; end
-        CC_Zx0C: begin f[3] <= cc_z;               f[1] <= 1'b0; f[0] <= cc_c; end
-        CC_x11x: begin               f[2] <= 1'b1; f[1] <= 1'b1;               end
-        CC_x001: begin               f[2] <= 1'b0; f[1] <= 1'b0; f[0] <= 1'b1; end
-        CC_Z0HC: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= cc_h; f[0] <= cc_c; end
-        CC_x00x: begin               f[2] <= 1'b0; f[1] <= 1'b0;               end
-        CC_Z1HC: begin f[3] <= cc_z; f[2] <= 1'b1; f[1] <= cc_h; f[0] <= cc_c; end
-        CC_Z010: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= 1'b1; f[0] <= 1'b0; end
-        CC_Z000: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= 1'b0; f[0] <= 1'b0; end
-        CC_00HC: begin f[3] <= 1'b0; f[2] <= 1'b0; f[1] <= cc_h; f[0] <= cc_c; end
-        CC_Z00C: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= 1'b0; f[0] <= cc_c; end
-        CC_Z01x: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= 1'b1;               end
+        CC_Z0Hx: begin f[3] <= nf[3]; f[2] <= 1'b0; f[1] <= nf[1];                end
+        CC_Z1Hx: begin f[3] <= nf[3]; f[2] <= 1'b1; f[1] <= nf[1];                end
+        CC_000C: begin f[3] <= 1'b0;  f[2] <= 1'b0; f[1] <= 1'b0;  f[0] <= nf[0]; end
+        CC_x0HC: begin                f[2] <= 1'b0; f[1] <= nf[1]; f[0] <= nf[0]; end
+        CC_Zx0C: begin f[3] <= nf[3];               f[1] <= 1'b0;  f[0] <= nf[0]; end
+        CC_x11x: begin                f[2] <= 1'b1; f[1] <= 1'b1;                 end
+        CC_x001: begin                f[2] <= 1'b0; f[1] <= 1'b0;  f[0] <= 1'b1;  end
+        CC_Z0HC: begin f[3] <= nf[3]; f[2] <= 1'b0; f[1] <= nf[1]; f[0] <= nf[0]; end
+        CC_x00x: begin                f[2] <= 1'b0; f[1] <= 1'b0;                 end
+        CC_Z1HC: begin f[3] <= nf[3]; f[2] <= 1'b1; f[1] <= nf[1]; f[0] <= nf[0]; end
+        CC_Z010: begin f[3] <= nf[3]; f[2] <= 1'b0; f[1] <= 1'b1;  f[0] <= 1'b0;  end
+        CC_Z000: begin f[3] <= nf[3]; f[2] <= 1'b0; f[1] <= 1'b0;  f[0] <= 1'b0;  end
+        CC_00HC: begin f[3] <= 1'b0;  f[2] <= 1'b0; f[1] <= nf[1]; f[0] <= nf[0]; end
+        CC_Z00C: begin f[3] <= nf[3]; f[2] <= 1'b0; f[1] <= 1'b0;  f[0] <= nf[0]; end
+        CC_Z01x: begin f[3] <= nf[3]; f[2] <= 1'b0; f[1] <= 1'b1;                 end
         endcase
     end
 end

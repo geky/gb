@@ -47,7 +47,7 @@ wire [7:0] rom_data;
 
 sram cart_rom(
     clock4, clock115200, clock460800, resetn,
-    rom_address, , rom_data, load, , prog, 
+    rom_address, 7'hxx, rom_data, load, 1'b0, prog, 
     
     //////////// Uart to USB //////////
 	UART_RX,

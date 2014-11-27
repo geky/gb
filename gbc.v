@@ -113,12 +113,19 @@ output		          		SRAM_WE_n;
 
 
 // Clocking //
-wire clock = CLOCK_50_B5B;
+wire clock50 = CLOCK_50_B5B;
 
+wire clock25;
+wire clock8;
+wire clock4;
 wire clock115200;
 wire clock460800;
-div #(434) div115200(clock, clock115200);
-div #(434/4) div460800(clock, clock460800);
+
+div #(2) div25(clock50, clock25);
+div #(6) div8(clock50, clock8);
+div #(12) div4(clock50, clock4);
+div #(434) div115200(clock50, clock115200);
+div #(434/4) div460800(clock50, clock460800);
 
 
 /*
@@ -161,16 +168,13 @@ vga_generator u_vga_generator (
   .vga_r(HDMI_TX_D[2*8 +: 8]),
   .vga_g(HDMI_TX_D[1*8 +: 8]),
   .vga_b(HDMI_TX_D[0*8 +: 8]) );*/
-/*
-wire clock50 = clk_50;
-wire clock25;
-div #(2) hdmi_div(clock50, clock25);
+
   
 wire [11:0] x;
 wire [11:0] y;
   
 hdmi test(
-    clk_25, clk_locked,
+    clock25, resetn,
     x, y,
     x[7:0] << 4, y[7:0] << 4, 8'd0,
     
@@ -181,7 +185,7 @@ hdmi test(
 	HDMI_TX_HS,
 	HDMI_TX_INT,
 	HDMI_TX_VS
-);*/
+);
 
 
 wire [7:0] linkdata;
@@ -202,18 +206,17 @@ wire [7:0] outdata;
 assign LEDG[2] = KEY[0];
 assign LEDG[3] = KEY[1];
     
-wire clock4;
 wire clocka;
 wire clockb;
 wire clockc;
-div #(12) div4(clock, clock4);
-div #(1000) diva(clock, clocka);
-div #(100000) divb(clock, clockb);
-div #(1000000) divc(clock, clockc);
-wire tclock = SW[8] ? clock4 : 
-              SW[7] ? clocka : 
-              SW[6] ? clockb : 
-              SW[5] ? clockc : KEY[0];
+div #(1000) diva(clock50, clocka);
+div #(100000) divb(clock50, clockb);
+div #(1000000) divc(clock50, clockc);
+wire tclock = SW[8] ? clock8 :
+              SW[7] ? clock4 : 
+              SW[6] ? clocka : 
+              SW[5] ? clockb : 
+              SW[4] ? clockc : KEY[0];
 wire resetn = KEY[1];
            
 wire [7:0] romdata;

@@ -1,16 +1,21 @@
-module lr_alu(d, op, a, b, c, nz, nh, nc);
+module lr_alu(d, op, a, b, f, nf);
 
 input [4:0] op;
 input [15:0] a;
 input [15:0] b;
 output reg [15:0] d;
-input c;
-output nz;
-output reg nh;
-output reg nc;
+input [3:0] f;
+output [3:0] nf;
 
+wire n = f[2];
+wire h = f[1];
+wire c = f[0];
 
-assign nz = (d[7:0] == 0);
+assign nf = {nz, 1'bx, nh, nc};
+wire nz = (d[7:0] == 0);
+reg nh;
+reg nc;
+
 
 always @(*) begin
     case (op)
@@ -35,7 +40,18 @@ always @(*) begin
                   
     SWAP:    d = {8'h00, a[3:0], a[7:4]};
     SWAP2:   d = {a[7:0], a[15:8]};
-    DAA:     d = 0; // ???
+    
+    DAA: begin
+        d = a;
+    
+        if (n) begin
+            if (c) d[7:0] = d[7:0] - 8'h60;
+            if (h) d[7:0] = d[7:0] - 8'h06;
+        end else begin
+            if (c || d[7:0] > 8'h99) d[7:0] = d[7:0] + 8'h60;
+            if (h || d[3:0] > 8'h09) d[7:0] = d[7:0] + 8'h06;
+        end
+    end
     default: d = 0;
     endcase
 end
@@ -69,6 +85,7 @@ always @(*) begin
     SLA:     nc = a[7];
     SRA:     nc = a[0];
     SRL:     nc = a[0];
+    DAA:     nc = !n && a[7:0] > 8'h99;
     default: nc = 0;
     endcase
 end
