@@ -345,6 +345,16 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SRAM_WE_n
 #============================================================
 
 
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "2.5 V"
+set_global_assignment -name QIP_FILE tram0.qip
+set_global_assignment -name QIP_FILE tram1.qip
 set_global_assignment -name VERILOG_FILE uart.v
 set_global_assignment -name VERILOG_FILE sram.v
 set_global_assignment -name VERILOG_FILE seg7.v
@@ -359,12 +369,15 @@ set_global_assignment -name VERILOG_FILE hdmi.v
 set_global_assignment -name VERILOG_FILE gbc.v
 set_global_assignment -name VERILOG_FILE div.v
 set_global_assignment -name SDC_FILE gbc.SDC
-set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
-set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
-set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
-set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "2.5 V"
+set_global_assignment -name VERILOG_FILE ppu.v
+set_global_assignment -name QIP_FILE vram.qip
+set_global_assignment -name QIP_FILE pram.qip
+set_global_assignment -name QIP_FILE oram.qip
+set_global_assignment -name QIP_FILE bgram.qip
+set_global_assignment -name QIP_FILE tram.qip
+set_global_assignment -name VERILOG_FILE mmap.v
+set_global_assignment -name OPTIMIZE_HOLD_TIMING "ALL PATHS"
+set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
+set_global_assignment -name FITTER_EFFORT "FAST FIT"
+set_global_assignment -name PHYSICAL_SYNTHESIS_EFFORT NORMAL
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

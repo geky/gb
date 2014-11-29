@@ -124,9 +124,10 @@ wire clock460800;
 div #(2) div25(clock50, clock25);
 div #(6) div8(clock50, clock8);
 div #(12) div4(clock50, clock4);
-div #(434) div115200(clock50, clock115200);
-div #(434/4) div460800(clock50, clock460800);
+div #(432) div115200(clock50, clock115200); // previously 434
+div #(432/4) div460800(clock50, clock460800);
 
+wire clockgb = tclock;
 
 /*
 ppu #(640, 480) ppu(clock, LEDG[0], LEDG[1],
@@ -169,11 +170,11 @@ vga_generator u_vga_generator (
   .vga_g(HDMI_TX_D[1*8 +: 8]),
   .vga_b(HDMI_TX_D[0*8 +: 8]) );*/
 
-  
+ /*
 wire [11:0] x;
 wire [11:0] y;
   
-hdmi test(
+hdmi #(4) test(
     clock25, resetn,
     x, y,
     x[7:0] << 4, y[7:0] << 4, 8'd0,
@@ -185,9 +186,40 @@ hdmi test(
 	HDMI_TX_HS,
 	HDMI_TX_INT,
 	HDMI_TX_VS
+);*/
+
+wire [7:0] ppudata;
+ppu ppu(
+    clock25, clockgb, resetn,
+    addr, outdata, ppudata, load, store,
+    
+	//////////// HDMI-TX //////////
+	HDMI_TX_CLK,
+	HDMI_TX_D,
+	HDMI_TX_DE,
+	HDMI_TX_HS,
+	HDMI_TX_INT,
+	HDMI_TX_VS,
+    LEDR
 );
 
+/*
+// PPU Instantiation //
+wire [7:0] ppudata;
+ppu ppu0(
+    clock25, clockgb, resetn,
+    addrlatch, datalatch, ppudata, loadlatch, storelatch,
+    
+	//////////// HDMI-TX //////////
+	HDMI_TX_CLK,
+	HDMI_TX_D,
+	HDMI_TX_DE,
+	HDMI_TX_HS,
+	HDMI_TX_INT,
+	HDMI_TX_VS
+);*/
 
+// Peripherals //
 wire [7:0] linkdata;
 wire linktx;
 link l0(clock115200, tclock, resetn,
@@ -295,6 +327,12 @@ always @(*) begin
         indata = ramdata;
     end else if (addrlatch2 >= 16'hff80 && addrlatch2 < 16'hffff) begin
         indata = highramdata;
+    end else if ((addrlatch2 >= 16'h9800 && addrlatch2 <= 16'hbfff) || 
+                 (addrlatch2 >= 16'h8000 && addrlatch2 <= 16'h97ff) || 
+                 (addrlatch2 >= 16'hfe00 && addrlatch2 <= 16'hfe9f) || 
+                 (addrlatch2 >= 16'hff47 && addrlatch2 <= 16'hff49) ||
+                 addrlatch2 == 16'hff42 || addrlatch2 == 16'hff43) begin
+        indata = ppudata;
     end else begin
         indata = linkdata;
     end
