@@ -100,7 +100,7 @@ inout 		     [3:0]		SD_DAT;
 
 //////////// Uart to USB //////////
 input 		          		UART_RX;
-output		          		UART_TX = linktx & romtx;
+output		          		UART_TX;
 
 //////////// SRAM //////////
 output		    [17:0]		SRAM_A;
@@ -127,71 +127,41 @@ div #(12) div4(clock50, clock4);
 div #(432) div115200(clock50, clock115200); // previously 434
 div #(432/4) div460800(clock50, clock460800);
 
-wire clockgb = tclock;
+wire clocka;
+wire clockb;
+wire clockc;
+div #(1000) diva(clock50, clocka);
+div #(100000) divb(clock50, clockb);
+div #(1000000) divc(clock50, clockc);
 
-/*
-ppu #(640, 480) ppu(clock, LEDG[0], LEDG[1],
-    HDMI_TX_CLK,
-    HDMI_TX_D,
-    HDMI_TX_DE,
-    HDMI_TX_HS,
-    HDMI_TX_INT,
-    HDMI_TX_VS
-);*/
-/*
-wire clk_50 = clock;
-reg clk_25 = 0;
-reg clk_locked = 0;
-always @(posedge clk_50) begin
-    clk_25 <= !clk_25;
-    clk_locked <= 1'b1;
-end
-*/
-//assign HDMI_TX_CLK = clk_25;
-/*
-vga_generator u_vga_generator (                                    
-  .clk(clk_25),            
-  .reset_n(clk_locked),                                                
-  .h_total(12'd799),           
-  .h_sync(12'd95),           
-  .h_start(12'd141),             
-  .h_end(12'd781),                                                    
-  .v_total(12'd524),           
-  .v_sync(12'd1),            
-  .v_start(12'd34),           
-  .v_end(12'd514), 
-  .v_active_14(12'd154), 
-  .v_active_24(12'd274), 
-  .v_active_34(12'd394), 
-  .vga_hs(HDMI_TX_HS),
-  .vga_vs(HDMI_TX_VS),           
-  .vga_de(HDMI_TX_DE),
-  .vga_r(HDMI_TX_D[2*8 +: 8]),
-  .vga_g(HDMI_TX_D[1*8 +: 8]),
-  .vga_b(HDMI_TX_D[0*8 +: 8]) );*/
+wire clockgb = SW[8] ? clock8 :
+               SW[7] ? clock4 : 
+               SW[6] ? clocka : 
+               SW[5] ? clockb : 
+               SW[4] ? clockc : KEY[0];
+               
+wire resetn = KEY[1];
 
- /*
-wire [11:0] x;
-wire [11:0] y;
-  
-hdmi #(4) test(
-    clock25, resetn,
-    x, y,
-    x[7:0] << 4, y[7:0] << 4, 8'd0,
-    
-	//////////// HDMI-TX //////////
-	HDMI_TX_CLK,
-	HDMI_TX_D,
-	HDMI_TX_DE,
-	HDMI_TX_HS,
-	HDMI_TX_INT,
-	HDMI_TX_VS
-);*/
 
-wire [7:0] ppudata;
+// Connecting Wires //
+wire [15:0] address;
+wire [7:0] outdata;
+wire load;
+wire store;
+
+wire [7:0] indata = ppu_data | link_data | timer_data |
+                    rom_data | loram_data | hiram_data | int_data;
+                    
+assign UART_TX = link_tx & rom_tx;
+
+
+// PPU //
+wire [7:0] ppu_data;
+wire [1:0] dmode;
+
 ppu ppu(
     clock25, clockgb, resetn,
-    addr, outdata, ppudata, load, store,
+    address, outdata, ppu_data, load, store,
     
 	//////////// HDMI-TX //////////
 	HDMI_TX_CLK,
@@ -200,66 +170,47 @@ ppu ppu(
 	HDMI_TX_HS,
 	HDMI_TX_INT,
 	HDMI_TX_VS,
-    LEDR
+    dmode
 );
 
-/*
-// PPU Instantiation //
-wire [7:0] ppudata;
-ppu ppu0(
-    clock25, clockgb, resetn,
-    addrlatch, datalatch, ppudata, loadlatch, storelatch,
-    
-	//////////// HDMI-TX //////////
-	HDMI_TX_CLK,
-	HDMI_TX_D,
-	HDMI_TX_DE,
-	HDMI_TX_HS,
-	HDMI_TX_INT,
-	HDMI_TX_VS
-);*/
 
-// Peripherals //
-wire [7:0] linkdata;
-wire linktx;
-link l0(clock115200, tclock, resetn,
-        addrlatch, datalatch, linkdata, loadlatch, storelatch,
+// Link Cable (Primarily for debugging) //
+wire [7:0] link_data;
+wire link_tx;
 
-        //////////// Uart to USB //////////
-        UART_RX,
-        linktx
+link link(
+    clock115200, clockgb, resetn,
+    address, outdata, link_data, load, store,
+
+    //////////// Uart to USB //////////
+    UART_RX,
+    link_tx
 );
 
-wire [15:0] addr;
-wire [15:0] u;
-wire [3:0] f;
-reg [7:0] indata;
-wire [7:0] outdata;
-assign LEDG[2] = KEY[0];
-assign LEDG[3] = KEY[1];
-    
-wire clocka;
-wire clockb;
-wire clockc;
-div #(1000) diva(clock50, clocka);
-div #(100000) divb(clock50, clockb);
-div #(1000000) divc(clock50, clockc);
-wire tclock = SW[8] ? clock8 :
-              SW[7] ? clock4 : 
-              SW[6] ? clocka : 
-              SW[5] ? clockb : 
-              SW[4] ? clockc : KEY[0];
-wire resetn = KEY[1];
-           
-wire [7:0] romdata;
-wire romtx;
+
+// Timer //
+wire [7:0] timer_data;
+wire timer_int;
+wire [7:0] dtimer;
+
+timer timer(
+    clockgb, resetn, timer_int,
+    address, outdata, timer_data, load, store,
+    dtimer
+);
+
+
+// Cartridge ROM //          
+wire [7:0] rom_data;
+wire rom_tx;
+
 mbc1 cart_rom(
-    SW[9] ? clock4 : tclock, clock115200, clock460800, resetn, 
-    addr, outdata, romdata, load, store, SW[9],
+    SW[9] ? clock4 : clockgb, clock115200, clock460800, resetn, 
+    address, outdata, rom_data, load, store, SW[9],
 
     //////////// Uart to USB //////////
 	UART_RX,
-    romtx,
+    rom_tx,
     
     //////////// SRAM //////////
 	SRAM_A,
@@ -271,77 +222,94 @@ mbc1 cart_rom(
 	SRAM_WE_n
 );
 
-wire [7:0] ramdata;
-ram ram0(addr, tclock, outdata, 
-         store && addr >= 16'hc000 && addr < 16'he000, 
-         ramdata);
-         
-wire [7:0] highramdata;
-highram ramh(addr, tclock, outdata,
-             store && addr >= 16'hff80 && addr < 16'hffff,
-             highramdata);
 
-         
+// Low RAM (Large) //
+wire [15:0] loram_address;
+wire [7:0] loram_indata;
+wire [7:0] loram_outdata;
+wire [7:0] loram_data;
+wire loram_store;
+
+loram loram(
+	loram_address[12:0],
+	clockgb,
+	loram_indata,
+	loram_store,
+	loram_outdata
+);
+
+mmap #(16'hc000, 16'hfdff) loram_mmap(
+    clockgb, resetn,
+    address, outdata, loram_data, load, store,
+    loram_address, loram_indata, loram_outdata,, loram_store
+);
+
+
+// High RAM (Small but faster) //
+wire [15:0] hiram_address;
+wire [7:0] hiram_indata;
+wire [7:0] hiram_outdata;
+wire [7:0] hiram_data;
+wire hiram_store;
+
+hiram hiram(
+    hiram_address,
+	clockgb,
+	hiram_indata,
+	hiram_store,
+	hiram_outdata
+);
+
+mmap #(16'hff80, 16'hfffe) hiram_mmap(
+    clockgb, resetn,
+    address, outdata, hiram_data, load, store,
+    hiram_address, hiram_indata, hiram_outdata,, hiram_store
+);
+
+
+// Interrupt Handling //
+wire [7:0] int_data;
+wire intreq;
+wire [15:0] intaddress;
+wire intack;
+wire [7:0] dints;
+
+inthandle inth(
+    clockgb, resetn,
+    address, outdata, int_data, load, store,
+    {1'b0, 1'b0, timer_int, 1'b0, 1'b0},
+    intreq, intaddress, intack, 
+    dints
+);
+
+  
+// CPU //  
+wire [15:0] du;
+wire [3:0] df;
 wire [15:0] daf;
 wire [15:0] dbc;
 wire [15:0] dde;
 wire [15:0] dhl;
 wire [15:0] dsp;
 wire [15:0] dpc;
-lr35902 cpu(tclock, resetn, addr, indata, outdata, load, store, u, f, daf, dbc, dde, dhl, dsp, dpc);
-wire load;
-wire store;
-assign LEDG[7:4] = f;
+
+lr35902 cpu(
+    clockgb, resetn, 
+    address, indata, outdata, load, store, 
+    intreq, intaddress, intack,
+    du, df, daf, dbc, dde, dhl, dsp, dpc
+);
+
+
+// Debugging Signals //
+assign LEDR[9:5] = dints[4:0];
+assign LEDR[1:0] = dmode;
+assign LEDG[7:4] = df;
 assign LEDG[1] = load;
 assign LEDG[0] = store;
 
-reg [15:0] addrlatch;
-reg [15:0] addrlatch2;
-reg [15:0] datalatch;
-reg loadlatch;
-reg loadlatch2;
-reg storelatch;
-
-always @(posedge tclock or negedge resetn) begin
-    if (!resetn) begin
-        addrlatch <= 0;
-        addrlatch2 <= 0;
-        datalatch <= 0;
-        loadlatch <= 0;
-        loadlatch2 <= 0;
-        storelatch <= 0;
-    end else begin
-        addrlatch <= addr;
-        addrlatch2 <= addrlatch;
-        datalatch <= outdata;
-        loadlatch <= load;
-        loadlatch2 <= loadlatch;
-        storelatch <= store;
-    end
-end
-
-always @(*) begin
-    if (addrlatch2 < 16'h8000) begin
-        indata = romdata;
-    end else if (addrlatch2 >= 16'hc000 && addrlatch2 < 16'he000) begin
-        indata = ramdata;
-    end else if (addrlatch2 >= 16'hff80 && addrlatch2 < 16'hffff) begin
-        indata = highramdata;
-    end else if ((addrlatch2 >= 16'h9800 && addrlatch2 <= 16'hbfff) || 
-                 (addrlatch2 >= 16'h8000 && addrlatch2 <= 16'h97ff) || 
-                 (addrlatch2 >= 16'hfe00 && addrlatch2 <= 16'hfe9f) || 
-                 (addrlatch2 >= 16'hff47 && addrlatch2 <= 16'hff49) ||
-                 addrlatch2 == 16'hff42 || addrlatch2 == 16'hff43) begin
-        indata = ppudata;
-    end else begin
-        indata = linkdata;
-    end
-end
-
-
-seg16 segs(debug, {HEX3,HEX2,HEX1,HEX0});
-
 reg [15:0] debug;
+seg16 segs(debug, {HEX3,HEX2,HEX1,HEX0});
 
 always @(*) begin
     case (SW[3:0])
@@ -351,11 +319,8 @@ always @(*) begin
     4'b1010: debug = dde;
     4'b1001: debug = dbc;
     4'b1000: debug = daf;
-    4'b0101: debug = loadlatch2 ? indata : 16'h0000;
-    4'b0100: debug = loadlatch2 ? addrlatch2 : 16'h0000;
-    4'b0011: debug = store ? outdata : 16'h0000;
-    4'b0010: debug = store ? addr : 16'h0000;
-    default: debug = u;
+    4'b0100: debug = dtimer;
+    default: debug = du;
     endcase
 end  
   

@@ -21,8 +21,9 @@ parameter D_DE      = 5'h0c;
 parameter D_HL      = 5'h0d;
 parameter D_SP      = 5'h0e;
 parameter D_IE      = 5'h0f;
-parameter D_TEMP    = 5'h10;
-parameter D_DATA    = 5'h11;
+parameter D_IACK    = 5'h10;
+parameter D_TEMP    = 5'h11;
+parameter D_DATA    = 5'h12;
 
 parameter OR        = 5'h00;
 parameter AND       = 5'h01;
@@ -69,8 +70,9 @@ parameter A_BC      = 5'h15;
 parameter A_DE      = 5'h16;
 parameter A_HL      = 5'h17;
 parameter A_SP      = 5'h18;
-parameter A_TEMP    = 5'h19;
-parameter A_MASK    = 5'h1a;
+parameter A_IADDR   = 5'h19;
+parameter A_TEMP    = 5'h1a;
+parameter A_MASK    = 5'h1b;
 
 parameter B_0       = 5'h00;
 parameter B_1       = 5'h01;
@@ -102,6 +104,7 @@ parameter B_BC      = 5'h1a;
 parameter B_DE      = 5'h1b;
 parameter B_HL      = 5'h1c;
 parameter B_SP      = 5'h1d;
+parameter B_IE      = 5'h1e;
 
 parameter CC_xxxx   = 5'h00;
 parameter CC_Z0Hx   = 5'h01;
@@ -136,6 +139,24 @@ always @(posedge clock or negedge resetn) begin
     16'hcb11: ucode <= {16'hcb12, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
     16'hcb12: ucode <= {16'hcb13, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
     16'hcb13: ucode <= {16'h0020, D_UC, OR, A_UC, B_D8, 2'b00, CC_xxxx};
+    // Halt
+    16'h7610: ucode <= {16'h0070, D_UC, OR, A_UC, B_IE, 2'b00, CC_xxxx};
+    16'h0070: ucode <= {16'h0000, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+    16'h0170: ucode <= {16'h0170, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+    // Interrupt Handling
+    16'h0050: ucode <= {16'h0051, D_SP, SUB, A_SP, B_1, 2'b00, CC_xxxx};
+    16'h0051: ucode <= {16'h0052, D_DATA, SWAP2, A_PC, B_0, 2'b00, CC_xxxx};
+    16'h0052: ucode <= {16'h0053, D_SP, SUB, A_SP, B_1, 2'b01, CC_xxxx};
+    16'h0053: ucode <= {16'h0054, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+    16'h0054: ucode <= {16'h0055, D_DATA, OR, A_PC, B_0, 2'b00, CC_xxxx};
+    16'h0055: ucode <= {16'h0056, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
+    16'h0056: ucode <= {16'h0057, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
+    
+    16'h0057: ucode <= {16'h0058, D_PC, OR, A_IADDR, B_0, 2'b00, CC_xxxx};
+    16'h0058: ucode <= {16'h0059, D_IE, OR, A_0, B_0, 2'b00, CC_xxxx};
+    16'h0059: ucode <= {16'h0000, D_IACK, OR, A_1, B_0, 2'b00, CC_xxxx};
+    
+    
     
     ////// BEGIN GENERATED INSTRUCTIONS ///////
     // NOP
@@ -491,7 +512,6 @@ always @(posedge clock or negedge resetn) begin
 	16'h7511: ucode <= {16'h7512, D_0, OR, A_HL, B_0, 2'b01, CC_xxxx};
 	16'h7512: ucode <= {16'h0042, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// HALT
-	16'h7610: ucode <= {16'h0000, D_PC, SUB, A_PC, B_1, 2'b00, CC_xxxx};
 	// LD (HL),A
 	16'h7710: ucode <= {16'h7711, D_DATA, OR, A_A, B_0, 2'b00, CC_xxxx};
 	16'h7711: ucode <= {16'h7712, D_0, OR, A_HL, B_0, 2'b01, CC_xxxx};

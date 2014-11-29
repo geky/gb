@@ -9,10 +9,8 @@ module ppu(
 	HDMI_TX_HS,
 	HDMI_TX_INT,
 	HDMI_TX_VS,
-    R
+    dmode
 );
-
-output [7:0] R = mode;
 
 parameter WIDTH = 160;
 parameter HEIGHT = 144;
@@ -41,6 +39,8 @@ output HDMI_TX_DE;
 output HDMI_TX_HS;
 output HDMI_TX_VS;
 input HDMI_TX_INT;
+
+output [7:0] dmode = mode;
 
 
 wire [7:0] x;
@@ -436,20 +436,20 @@ wire [7:0] scrolly_indata;
 wire [7:0] scrolly_data;
 wire scrolly_store;
 
-rrmmap #(16'hff42, 16'hff42) scrolly_mmap(
+rrmmap #(16'hff42) scrolly_mmap(
     clockgb, resetn,
-    address, indata, scrolly_data, load, store,
-    , scrolly_indata, scrolly,, scrolly_store
+    address, indata, scrolly_data, load, store,, 
+    scrolly_indata, scrolly,, scrolly_store
 );
 
 wire [7:0] scrollx_indata;
 wire [7:0] scrollx_data;
 wire scrollx_store;
 
-rrmmap #(16'hff43, 16'hff43) scrollx_mmap(
+rrmmap #(16'hff43) scrollx_mmap(
     clockgb, resetn,
-    address, indata, scrollx_data, load, store,
-    , scrollx_indata, scrollx,, scrollx_store
+    address, indata, scrollx_data, load, store,,
+    scrollx_indata, scrollx,, scrollx_store
 );
 
 
