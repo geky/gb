@@ -83,10 +83,10 @@ always @(*) begin
     A_8:     bus_a = 16'h08;
     A_10:    bus_a = 16'h10;
     A_18:    bus_a = 16'h18;
-    A_20:    bus_a = 16'h10;
-    A_28:    bus_a = 16'h18;
-    A_30:    bus_a = 16'h10;
-    A_38:    bus_a = 16'h18;
+    A_20:    bus_a = 16'h20;
+    A_28:    bus_a = 16'h28;
+    A_30:    bus_a = 16'h30;
+    A_38:    bus_a = 16'h38;
     A_PC:    bus_a = pc;
     A_UC:    bus_a = {uc_u[7:0], uc_u[15:8]};
     A_D16:   bus_a = {indata, temp[7:0]};

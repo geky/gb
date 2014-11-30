@@ -25,8 +25,8 @@ output [4:0] dints = intf;
 
 reg [2:0] intnum;
 
-reg [7:0] intf;
-reg [7:0] inte;
+reg [4:0] intf;
+reg [4:0] inte;
 
 
 always @(*) begin
@@ -35,7 +35,7 @@ always @(*) begin
     intreq = 1'b0;
     intnum = 1'b0;
     
-    for (i=4-1; i >= 0; i=i-1) begin
+    for (i=5-1; i >= 0; i=i-1) begin
         if (intf[i] && inte[i]) begin
             intreq = 1'b1;
             intnum = i[2:0];
@@ -59,7 +59,7 @@ always @(posedge clockgb or negedge resetn) begin
         intf <= 0;
         inte <= 0;
     end else begin
-        for (i=0; i < 4; i=i+1) begin
+        for (i=0; i < 5; i=i+1) begin
             if (interrupts[i]) begin
                 intf[i] <= 1'b1;
             end else if (intreq && intack && i == intnum) begin
@@ -77,7 +77,7 @@ always @(posedge clockgb or negedge resetn) begin
 end
 
 
-wire [7:0] intf_indata;
+wire [4:0] intf_indata;
 wire [7:0] intf_data;
 wire intf_store;
 
@@ -87,7 +87,7 @@ rrmmap #(16'hff0f) intf_mmap(
     intf_indata, intf,, intf_store
 );
 
-wire [7:0] inte_indata;
+wire [4:0] inte_indata;
 wire [7:0] inte_data;
 wire inte_store;
 

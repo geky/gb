@@ -149,7 +149,7 @@ wire [7:0] outdata;
 wire load;
 wire store;
 
-wire [7:0] indata = ppu_data | link_data | timer_data |
+wire [7:0] indata = ppu_data | link_data | timer_data | joy_data | 
                     rom_data | loram_data | hiram_data | int_data;
                     
 assign UART_TX = link_tx & rom_tx;
@@ -157,10 +157,12 @@ assign UART_TX = link_tx & rom_tx;
 
 // PPU //
 wire [7:0] ppu_data;
+wire vblank_int;
+wire lcdc_int;
 wire [1:0] dmode;
 
 ppu ppu(
-    clock25, clockgb, resetn,
+    clock25, clockgb, resetn, vblank_int, lcdc_int,
     address, outdata, ppu_data, load, store,
     
 	//////////// HDMI-TX //////////
@@ -267,17 +269,27 @@ mmap #(16'hff80, 16'hfffe) hiram_mmap(
 );
 
 
+// temporary joypad input //
+wire [7:0] joy_data;
+
+rrmmap #(16'hff00) joy_map(
+    clockgb, resetn,
+    address, outdata, joy_data, load, store,,,
+    8'h0f
+);
+
+
 // Interrupt Handling //
 wire [7:0] int_data;
 wire intreq;
 wire [15:0] intaddress;
 wire intack;
-wire [7:0] dints;
+wire [4:0] dints;
 
 inthandle inth(
     clockgb, resetn,
     address, outdata, int_data, load, store,
-    {1'b0, 1'b0, timer_int, 1'b0, 1'b0},
+    {1'b0, 1'b0, timer_int, lcdc_int, vblank_int},
     intreq, intaddress, intack, 
     dints
 );
@@ -302,7 +314,7 @@ lr35902 cpu(
 
 
 // Debugging Signals //
-assign LEDR[9:5] = dints[4:0];
+assign LEDR[9:5] = dints;
 assign LEDR[1:0] = dmode;
 assign LEDG[7:4] = df;
 assign LEDG[1] = load;

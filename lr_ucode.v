@@ -159,7 +159,7 @@ always @(posedge clock or negedge resetn) begin
     
     
     ////// BEGIN GENERATED INSTRUCTIONS ///////
-    // NOP
+    	// NOP
 	16'h0010: ucode <= {16'h0000, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	// LD BC,d16
 	16'h0110: ucode <= {16'h0111, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
@@ -214,6 +214,7 @@ always @(posedge clock or negedge resetn) begin
 	// RRCA
 	16'h0f10: ucode <= {16'h0000, D_A, RRC, A_A, B_0, 2'b00, CC_000C};
 	// STOP 0
+	16'h1010: ucode <= {16'h0000, D_PC, SUB, A_PC, B_1, 2'b00, CC_xxxx};
 	// LD DE,d16
 	16'h1110: ucode <= {16'h1111, D_PC, ADD, A_PC, B_1, 2'b10, CC_xxxx};
 	16'h1111: ucode <= {16'h1112, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
@@ -1111,6 +1112,7 @@ always @(posedge clock or negedge resetn) begin
 	16'hff15: ucode <= {16'hff16, D_0, OR, A_SP, B_0, 2'b01, CC_xxxx};
 	16'hff16: ucode <= {16'hff17, D_0, OR, A_0, B_0, 2'b00, CC_xxxx};
 	16'hff17: ucode <= {16'h0045, D_PC, OR, A_38, B_0, 2'b00, CC_xxxx};
+
 
 
     ////// BEGIN GENERATED EXTENSIONS //////

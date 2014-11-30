@@ -1,12 +1,12 @@
 module timer(
-    clockgb, resetn, intt,
+    clockgb, resetn, overflow_int,
     address, indata, outdata, load, store,
     dtimer
 );
 
 input clockgb;
 input resetn;
-output intt = overflow;
+output overflow_int = overflow;
 
 input [15:0] address;
 input [7:0] indata;
@@ -101,7 +101,7 @@ wire [7:0] tma_indata;
 wire [7:0] tma_data;
 wire tma_store;
 
-rrmmap #(16'hff05) tma_mmap(
+rrmmap #(16'hff06) tma_mmap(
     clockgb, resetn,
     address, indata, tma_data, load, store,,
     tma_indata, tma,, tma_store

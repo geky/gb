@@ -1,5 +1,5 @@
 module mbc1(
-    clock4, clock115200, clock460800, resetn,
+    clockgb, clock115200, clock460800, resetn,
     address, indata, outdata, load, store, prog,
     
     //////////// Uart to USB //////////
@@ -16,14 +16,14 @@ module mbc1(
 	SRAM_WE_n
 );
 
-input clock4;
+input clockgb;
 input clock115200;
 input clock460800;
 input resetn;
 
 input [15:0] address;
 input [7:0] indata;
-output [7:0] outdata = rom_data;
+output [7:0] outdata;
 input load;
 input store;
 input prog;
@@ -42,12 +42,12 @@ output SRAM_OE_n;
 output SRAM_WE_n;
 
 
-reg [15:0] rom_address;
-wire [7:0] rom_data;
+reg [15:0] sram_address;
+wire [7:0] sram_data;
 
-sram cart_rom(
-    clock4, clock115200, clock460800, resetn,
-    rom_address, 7'hxx, rom_data, load, 1'b0, prog, 
+sram cart_sram(
+    clockgb, clock115200, clock460800, resetn,
+    sram_address,, sram_data, load, 1'b0, prog, 
     
     //////////// Uart to USB //////////
 	UART_RX,
@@ -64,28 +64,50 @@ sram cart_rom(
 );
 
 
-reg [1:0] select;
+reg [1:0] bank;
 
 always @(*) begin
-    if (address < 16'h4000) begin
-        rom_address = address;
+    if (rom_address < 16'h4000) begin
+        sram_address = rom_address;
     end else begin
-        rom_address = {select, address[13:0]};
+        sram_address = {bank, rom_address[13:0]};
     end
 end
 
-always @(posedge clock4 or negedge resetn) begin
+always @(posedge clockgb or negedge resetn) begin
     if (!resetn) begin
-        select <= 2'b1;
+        bank <= 2'b1;
     end else begin
-        if (store && address >= 16'h2000 && address < 16'h4000) begin
-            if (indata[1:0] == 2'b00) begin
-                select <= 2'b01;
+        if (bank_store) begin
+            if (bank_indata == 0) begin
+                bank <= 2'b1;
             end else begin
-                select <= indata[1:0];
+                bank <= bank_indata[1:0];
             end
         end
     end
 end 
+
+
+wire [15:0] rom_address;
+wire [7:0] rom_data;
+wire rom_store;
+
+mmap #(16'h0000, 16'h7fff) rom_mmap(
+    clockgb, resetn,
+    address, indata, rom_data, load, store,
+    rom_address,, sram_data,, rom_store
+);
+
+wire [7:0] bank_indata;
+wire bank_store;
+
+mmap #(16'h2000, 16'h3fff) bank_mmap(
+    clockgb, resetn,
+    address, indata,, load, store,, 
+    bank_indata,,, bank_store
+);
+
+assign outdata = rom_data;
 
 endmodule

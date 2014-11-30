@@ -367,8 +367,6 @@ set_global_assignment -name VERILOG_FILE div.v
 set_global_assignment -name SDC_FILE gbc.SDC
 set_global_assignment -name VERILOG_FILE ppu.v
 set_global_assignment -name QIP_FILE vram.qip
-set_global_assignment -name QIP_FILE pram.qip
-set_global_assignment -name QIP_FILE oram.qip
 set_global_assignment -name QIP_FILE bgram.qip
 set_global_assignment -name QIP_FILE tram.qip
 set_global_assignment -name VERILOG_FILE mmap.v
