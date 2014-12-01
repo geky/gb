@@ -12,6 +12,8 @@ module hdmi(
 	HDMI_TX_VS
 );
 
+parameter CYCLE_DELAY = 0;
+
 parameter WIDTH = 160;
 parameter HEIGHT = 144;
 parameter XDIV = 3;
@@ -29,6 +31,7 @@ parameter HSTART = 141;
 parameter HEND = HSTART + HSIZE;
 parameter VSTART = 34;
 parameter VEND = VSTART + VSIZE;
+
 
 input clock25;
 input resetn;
@@ -49,6 +52,8 @@ input HDMI_TX_INT;
 reg [23:0] hdmi_data;
 reg [1:0] hdmi_de;
 
+reg [11:0] hdmi_hprecount;
+reg [11:0] hdmi_vprecount;
 reg [11:0] hdmi_hcount;
 reg [11:0] hdmi_vcount;
 wire hdmi_hactive = hdmi_hcount >= HSTART && hdmi_hcount < HEND;
@@ -83,6 +88,8 @@ end
 
 wire xactive = hdmi_hcount >= HSTART+XSTART && hdmi_hcount < HSTART+XEND;
 wire yactive = hdmi_vcount >= VSTART+YSTART && hdmi_vcount < VSTART+YEND;
+wire xsetup = hdmi_hcount >= HSTART+XSTART-CYCLE_DELAY && hdmi_hcount < HSTART+XEND-CYCLE_DELAY;
+wire ysetup = hdmi_vcount >= VSTART+YSTART && hdmi_vcount < VSTART+YEND;
 
 reg [$clog2(XDIV)-1:0] xcount;
 reg [$clog2(YDIV)-1:0] ycount;
@@ -97,7 +104,11 @@ always @(posedge clock25 or negedge resetn) begin
     end else begin
         if (xactive && yactive) begin
             hdmi_data <= {r, g, b};
-        
+        end else begin
+            hdmi_data <= 0;
+        end
+    
+        if (xsetup && ysetup) begin
             if (xcount + 1'b1 == XDIV) begin
                 xcount <= 0;
                 if (x + 1'b1 == WIDTH) begin
@@ -118,10 +129,9 @@ always @(posedge clock25 or negedge resetn) begin
             end else begin
                 xcount <= xcount + 1'b1;
             end
-        end else begin
-            hdmi_data <= 0;
         end
     end 
 end
 
 endmodule
+
