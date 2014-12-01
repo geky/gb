@@ -95,7 +95,7 @@ wire rom_store;
 
 mmap #(16'h0000, 16'h7fff) rom_mmap(
     clockgb, resetn,
-    address, indata, rom_data, load, store,
+    address, indata, outdata, load, store,
     rom_address,, sram_data,, rom_store
 );
 
@@ -107,7 +107,5 @@ mmap #(16'h2000, 16'h3fff) bank_mmap(
     address, indata,, load, store,, 
     bank_indata,,, bank_store
 );
-
-assign outdata = rom_data;
 
 endmodule

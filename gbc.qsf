@@ -378,4 +378,6 @@ set_global_assignment -name QIP_FILE loram.qip
 set_global_assignment -name QIP_FILE hiram.qip
 set_global_assignment -name VERILOG_FILE inthandle.v
 set_global_assignment -name VERILOG_FILE timer.v
+set_global_assignment -name VERILOG_FILE dma.v
+set_global_assignment -name VERILOG_FILE joypad.v
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

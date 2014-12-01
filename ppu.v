@@ -132,7 +132,7 @@ always @(posedge clockgb) begin
     sprite_val[0] <= 0;
 
     for (i=SPRITE_COUNT-1; i >= 0; i=i-1) begin
-        if (ppu_x[0] >= sprites[i][1]-8'd16 && ppu_x[0] < sprites[i][1]-8'd16+8'h8 &&
+        if (ppu_x[0] >= sprites[i][1]-8'd8 && ppu_x[0] < sprites[i][1]-8'd8+8'h8 &&
             ppu_y[0] >= sprites[i][0]-8'd16 && ppu_y[0] < sprites[i][0]-8'd16+8'h8) begin
             
             sprite_tile <= sprites[i][2];
@@ -178,11 +178,12 @@ always @(posedge clockgb) begin
 end
 
 
-wire [7:0] w_xpre = ppu_x[0] - wx;
+wire [7:0] w_xpre = ppu_x[0] - (wx-8'd7);
 wire [7:0] w_ypre = ppu_y[0] - wy;
 reg [2:0] w_x [3];
 reg [2:0] w_y [3];
 reg [3:0] w_pal [3];
+reg w_val [3];
 wire [7:0] w_tile;
 wire [5:0] w_id = {w_pal[2], w_pid};
 
@@ -196,6 +197,9 @@ always @(posedge clockgb) begin
     w_pal[0] <= 0;
     w_pal[1] <= w_pal[0];
     w_pal[2] <= w_pal[1];
+    w_val[0] <= (ppu_x[0] >= wx && ppu_y[0] >= wy);
+    w_val[1] <= w_val[0];
+    w_val[2] <= w_val[1];
 end
 
 
@@ -237,38 +241,26 @@ wire [7:0] w_lo;
 wire [1:0] w_pid = {w_hi[3'd7-bg_x[2]], w_lo[3'd7-bg_x[2]]};
 
 tram sprite_tram(
-	tile_address,
-	{sprite_tile, sprite_y[0]},
-	clockgb,
-	tile_indata,
-	,
-	tile_store,
-	1'b0,
-	tile_outdata,
-	{sprite_hi, sprite_lo}
+	tile_address, {sprite_tile, sprite_y[0]},
+    clockgb,
+	tile_indata,,
+	tile_store, 1'b0,
+	tile_outdata, {sprite_hi, sprite_lo}
 );
 
 tram bg_tram(
-	tile_address,
-	{bg_tile, bg_y[0]},
+	tile_address, {bg_tile, bg_y[0]},
 	clockgb,
-	tile_indata,
-	,
-	tile_store,
-	1'b0,
-	,
-	{bg_hi, bg_lo}
+	tile_indata,,
+	tile_store, 1'b0,, 
+    {bg_hi, bg_lo}
 );
 
 tram w_tram(
-	tile_address,
-	{w_tile, w_y[0]},
+	tile_address, {w_tile, w_y[0]},
 	clockgb,
-	tile_indata,
-	,
-	tile_store,
-	1'b0,
-	,
+	tile_indata,,
+	tile_store, 1'b0,,
 	{w_hi, w_lo}
 );
 
@@ -288,24 +280,19 @@ mmap #(16'h8000, 16'h97ff) tile_mmap(
 reg [5:0] ppu_id;
 
 always @(*) begin
-    /*if (sprite_id == 0 || sprite_pri[2]) begin
+    if (sprite_pri[2] && lcdc[0] && lcdc[5] && w_val[2] && w_id != 0) begin
         ppu_id = w_id;
-    end */
-    if (lcdc[1] && sprite_val[2] && sprite_id != 0 && (!sprite_pri[2] || bg_id == 0)) begin
+    end else if (sprite_pri[2] && lcdc[0] && bg_id != 0) begin
+        ppu_id = bg_id;
+    end else if (lcdc[1] && sprite_val[2] && sprite_id != 0) begin
         ppu_id = sprite_id;
+    end else if (lcdc[0] && lcdc[5] && w_val[2]) begin
+        ppu_id = w_id;
     end else if (lcdc[0]) begin
         ppu_id = bg_id;
     end else begin
         ppu_id = 0;
     end
-    
-    //if (/*lcdc[0] && */(sprite_id == 0 || (sprite_pri[2] && bg_id != 0))) begin
-    //    ppu_id = bg_id;
-    //end else if (/*lcdc[1]*/1) begin
-    //    ppu_id = sprite_id;
-    //end else begin
-    //    ppu_id = 0;
-    //end
 end
     
 
