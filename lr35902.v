@@ -1,4 +1,9 @@
-module lr35902(clock4, resetn, address, indata, outdata, load, store, du, df, daf, dbc, dde, dhl, dsp, dpc);
+module lr35902(
+    clock4, resetn, 
+    address, indata, outdata, load, store,
+    intreq, intaddress, intack,
+    du, df, daf, dbc, dde, dhl, dsp, dpc
+);
 
 input clock4;
 input resetn;
@@ -6,9 +11,12 @@ input resetn;
 output [15:0] address = bus_a;
 input [7:0] indata;
 output reg [7:0] outdata;
-
 output load;
 output store;
+
+input intreq;
+input [15:0] intaddress;
+output reg intack;
 
 output [15:0] du = u;
 output [3:0] df = f;
@@ -29,14 +37,20 @@ wire [4:0] uc_a;
 wire [4:0] uc_b;
 wire [4:0] uc_cc;
 
+reg ie;
+
 lr_ucode uc(u, clock4, resetn, {uc_u, uc_d, uc_op, uc_a, uc_b, load, store, uc_cc});
 
 always @(*) begin
-    if (uc_d == D_UC) begin
+    if (intreq && ie && (uc_u[7:0] == 8'h00 || uc_u[7:0] == 8'h70)) begin
+        u = 16'h0050;
+    end else if (uc_d == D_UC) begin
         u = {bus_d[7:0], bus_d[15:8]};
     end else begin
         u = uc_u;
     end
+    
+    intack = (uc_d == D_IACK);
 end
 
 
@@ -52,16 +66,14 @@ reg [15:0] sp;
 reg [15:0] pc;
 
 reg [15:0] temp;
-reg ie;
 
-wire cc_z;
-wire cc_h;
-wire cc_c;
+
 reg [15:0] bus_a;
 reg [15:0] bus_b;
 wire [15:0] bus_d;
+wire [3:0] nf;
 
-lr_alu alu(bus_d, uc_op, bus_a, bus_b, f[0], cc_z, cc_h, cc_c);
+lr_alu alu(bus_d, uc_op, bus_a, bus_b, f, nf);
 
 
 always @(*) begin
@@ -71,10 +83,10 @@ always @(*) begin
     A_8:     bus_a = 16'h08;
     A_10:    bus_a = 16'h10;
     A_18:    bus_a = 16'h18;
-    A_20:    bus_a = 16'h10;
-    A_28:    bus_a = 16'h18;
-    A_30:    bus_a = 16'h10;
-    A_38:    bus_a = 16'h18;
+    A_20:    bus_a = 16'h20;
+    A_28:    bus_a = 16'h28;
+    A_30:    bus_a = 16'h30;
+    A_38:    bus_a = 16'h38;
     A_PC:    bus_a = pc;
     A_UC:    bus_a = {uc_u[7:0], uc_u[15:8]};
     A_D16:   bus_a = {indata, temp[7:0]};
@@ -91,6 +103,7 @@ always @(*) begin
     A_DE:    bus_a = {d, e};
     A_HL:    bus_a = {h, l};
     A_SP:    bus_a = sp;
+    A_IADDR: bus_a = intaddress;
     A_TEMP:  bus_a = temp;
     A_MASK:  bus_a = 16'hff00;
     default: bus_a = 16'h0000;
@@ -129,6 +142,7 @@ always @(*) begin
     B_DE:    bus_b = {d, e};
     B_HL:    bus_b = {h, l};
     B_SP:    bus_b = sp;
+    B_IE:    bus_b = ie;
     default: bus_b = 16'h0000;
     endcase
 end
@@ -145,6 +159,7 @@ always @(posedge clock4 or negedge resetn) begin
         e <= 8'hd8;
         h <= 8'h01;
         l <= 8'h4d;
+        ie <= 0;
     end else begin
         case (uc_d)
         D_PC:   pc      <= bus_d;
@@ -166,21 +181,21 @@ always @(posedge clock4 or negedge resetn) begin
         endcase
     
         case (uc_cc)
-        CC_Z0Hx: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= cc_h;               end
-        CC_Z1Hx: begin f[3] <= cc_z; f[2] <= 1'b1; f[1] <= cc_h;               end
-        CC_000C: begin f[3] <= 1'b0; f[2] <= 1'b0; f[1] <= 1'b0; f[0] <= cc_c; end
-        CC_x0HC: begin               f[2] <= 1'b0; f[1] <= cc_h; f[0] <= cc_c; end
-        CC_Zx0C: begin f[3] <= cc_z;               f[1] <= 1'b0; f[0] <= cc_c; end
-        CC_x11x: begin               f[2] <= 1'b1; f[1] <= 1'b1;               end
-        CC_x001: begin               f[2] <= 1'b0; f[1] <= 1'b0; f[0] <= 1'b1; end
-        CC_Z0HC: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= cc_h; f[0] <= cc_c; end
-        CC_x00x: begin               f[2] <= 1'b0; f[1] <= 1'b0;               end
-        CC_Z1HC: begin f[3] <= cc_z; f[2] <= 1'b1; f[1] <= cc_h; f[0] <= cc_c; end
-        CC_Z010: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= 1'b1; f[0] <= 1'b0; end
-        CC_Z000: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= 1'b0; f[0] <= 1'b0; end
-        CC_00HC: begin f[3] <= 1'b0; f[2] <= 1'b0; f[1] <= cc_h; f[0] <= cc_c; end
-        CC_Z00C: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= 1'b0; f[0] <= cc_c; end
-        CC_Z01x: begin f[3] <= cc_z; f[2] <= 1'b0; f[1] <= 1'b1;               end
+        CC_Z0Hx: begin f[3] <= nf[3]; f[2] <= 1'b0; f[1] <= nf[1];                end
+        CC_Z1Hx: begin f[3] <= nf[3]; f[2] <= 1'b1; f[1] <= nf[1];                end
+        CC_000C: begin f[3] <= 1'b0;  f[2] <= 1'b0; f[1] <= 1'b0;  f[0] <= nf[0]; end
+        CC_x0HC: begin                f[2] <= 1'b0; f[1] <= nf[1]; f[0] <= nf[0]; end
+        CC_Zx0C: begin f[3] <= nf[3];               f[1] <= 1'b0;  f[0] <= nf[0]; end
+        CC_x11x: begin                f[2] <= 1'b1; f[1] <= 1'b1;                 end
+        CC_x001: begin                f[2] <= 1'b0; f[1] <= 1'b0;  f[0] <= 1'b1;  end
+        CC_Z0HC: begin f[3] <= nf[3]; f[2] <= 1'b0; f[1] <= nf[1]; f[0] <= nf[0]; end
+        CC_x00x: begin                f[2] <= 1'b0; f[1] <= 1'b0;                 end
+        CC_Z1HC: begin f[3] <= nf[3]; f[2] <= 1'b1; f[1] <= nf[1]; f[0] <= nf[0]; end
+        CC_Z010: begin f[3] <= nf[3]; f[2] <= 1'b0; f[1] <= 1'b1;  f[0] <= 1'b0;  end
+        CC_Z000: begin f[3] <= nf[3]; f[2] <= 1'b0; f[1] <= 1'b0;  f[0] <= 1'b0;  end
+        CC_00HC: begin f[3] <= 1'b0;  f[2] <= 1'b0; f[1] <= nf[1]; f[0] <= nf[0]; end
+        CC_Z00C: begin f[3] <= nf[3]; f[2] <= 1'b0; f[1] <= 1'b0;  f[0] <= nf[0]; end
+        CC_Z01x: begin f[3] <= nf[3]; f[2] <= 1'b0; f[1] <= 1'b1;                 end
         endcase
     end
 end
@@ -204,8 +219,9 @@ parameter D_DE      = 5'h0c;
 parameter D_HL      = 5'h0d;
 parameter D_SP      = 5'h0e;
 parameter D_IE      = 5'h0f;
-parameter D_TEMP    = 5'h10;
-parameter D_DATA    = 5'h11;
+parameter D_IACK    = 5'h10;
+parameter D_TEMP    = 5'h11;
+parameter D_DATA    = 5'h12;
 
 parameter A_0       = 5'h00;
 parameter A_1       = 5'h01;
@@ -232,8 +248,9 @@ parameter A_BC      = 5'h15;
 parameter A_DE      = 5'h16;
 parameter A_HL      = 5'h17;
 parameter A_SP      = 5'h18;
-parameter A_TEMP    = 5'h19;
-parameter A_MASK    = 5'h1a;
+parameter A_IADDR   = 5'h19;
+parameter A_TEMP    = 5'h1a;
+parameter A_MASK    = 5'h1b;
 
 parameter B_0       = 5'h00;
 parameter B_1       = 5'h01;
@@ -265,6 +282,7 @@ parameter B_BC      = 5'h1a;
 parameter B_DE      = 5'h1b;
 parameter B_HL      = 5'h1c;
 parameter B_SP      = 5'h1d;
+parameter B_IE      = 5'h1e;
 
 parameter CC_xxxx   = 5'h00;
 parameter CC_Z0Hx   = 5'h01;
