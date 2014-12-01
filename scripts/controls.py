@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
 import sys
+import os
 import pygame
 
 KEY_A       = pygame.K_RETURN
@@ -41,6 +42,7 @@ def main():
 
             if mask != prev_mask:
                 output.write(chr(mask))
+                output.flush()
                 prev_mask = mask
 
 
