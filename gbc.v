@@ -144,15 +144,41 @@ wire resetn = KEY[1];
 
 
 // Connecting Wires //
-wire [15:0] address;
-wire [7:0] outdata;
-wire load;
-wire store;
+reg [15:0] bus_address;
+reg [7:0] bus_outdata;
+reg bus_load;
+reg bus_store;
 
-wire [7:0] indata = ppu_data | link_data | timer_data | joy_data | 
-                    rom_data | loram_data | hiram_data | int_data;
-                    
-assign UART_TX = link_tx & rom_tx;
+wire [7:0] bus_data = ppu_data | link_data | timer_data | 
+                      joy_data | dma_data | 
+                      rom_data | loram_data;
+                   
+wire [7:0] cpu_data = hiram_data | int_data;
+
+
+always @(*) begin
+    if (!dma_active) begin
+        bus_address = cpu_address;
+        bus_outdata = cpu_outdata;
+        bus_load = cpu_load;
+        bus_store = cpu_store;
+        
+        cpu_indata = cpu_data | bus_data;
+        dma_indata = 0;
+    end else begin
+        bus_address = dma_address;
+        bus_outdata = dma_outdata;
+        bus_load = dma_load;
+        bus_store = dma_store;
+    
+        cpu_indata = cpu_data;
+        dma_indata = bus_data;
+    end
+end
+
+
+assign UART_TX = link_tx & rom_tx & joy_tx;
+
 
 
 // PPU //
@@ -163,7 +189,7 @@ wire [1:0] dmode;
 
 ppu ppu(
     clock25, clockgb, resetn, vblank_int, lcdc_int,
-    address, outdata, ppu_data, load, store,
+    bus_address, bus_outdata, ppu_data, bus_load, bus_store,
     
 	//////////// HDMI-TX //////////
 	HDMI_TX_CLK,
@@ -182,7 +208,7 @@ wire link_tx;
 
 link link(
     clock115200, clockgb, resetn,
-    address, outdata, link_data, load, store,
+    bus_address, bus_outdata, link_data, bus_load, bus_store,
 
     //////////// Uart to USB //////////
     UART_RX,
@@ -197,8 +223,40 @@ wire [7:0] dtimer;
 
 timer timer(
     clockgb, resetn, timer_int,
-    address, outdata, timer_data, load, store,
+    bus_address, bus_outdata, timer_data, bus_load, bus_store,
     dtimer
+);
+
+
+// Joypad over UART //
+wire [7:0] joy_data;
+wire joy_tx;
+
+joypad joypad(
+    clock460800, clockgb, resetn,
+    bus_address, bus_outdata, joy_data, bus_load, bus_store,
+    
+    //////////// Uart to USB //////////
+    UART_RX,
+    joy_tx
+);
+
+
+// DMA //
+wire [7:0] dma_data;
+
+wire [15:0] dma_address;
+wire [7:0] dma_outdata;
+reg [7:0] dma_indata;
+wire dma_load;
+wire dma_store;
+wire dma_active;
+
+dma dma(
+    clockgb, resetn,
+    bus_address, bus_outdata, dma_data, bus_load, bus_store,
+    dma_address, dma_indata, dma_outdata, dma_load, dma_store,
+    dma_active
 );
 
 
@@ -208,7 +266,7 @@ wire rom_tx;
 
 mbc1 cart_rom(
     SW[9] ? clock4 : clockgb, clock115200, clock460800, resetn, 
-    address, outdata, rom_data, load, store, SW[9],
+    bus_address, bus_outdata, rom_data, bus_load, bus_store, SW[9],
 
     //////////// Uart to USB //////////
 	UART_RX,
@@ -242,7 +300,7 @@ loram loram(
 
 mmap #(16'hc000, 16'hfdff) loram_mmap(
     clockgb, resetn,
-    address, outdata, loram_data, load, store,
+    bus_address, bus_outdata, loram_data, bus_load, bus_store,
     loram_address, loram_indata, loram_outdata,, loram_store
 );
 
@@ -264,38 +322,34 @@ hiram hiram(
 
 mmap #(16'hff80, 16'hfffe) hiram_mmap(
     clockgb, resetn,
-    address, outdata, hiram_data, load, store,
+    cpu_address, cpu_outdata, hiram_data, cpu_load, cpu_store,
     hiram_address, hiram_indata, hiram_outdata,, hiram_store
-);
-
-
-// temporary joypad input //
-wire [7:0] joy_data;
-
-rrmmap #(16'hff00) joy_map(
-    clockgb, resetn,
-    address, outdata, joy_data, load, store,,,
-    8'h0f
 );
 
 
 // Interrupt Handling //
 wire [7:0] int_data;
-wire intreq;
-wire [15:0] intaddress;
-wire intack;
+wire int_req;
+wire [15:0] int_address;
+wire int_ack;
 wire [4:0] dints;
 
 inthandle inth(
     clockgb, resetn,
-    address, outdata, int_data, load, store,
+    cpu_address, cpu_outdata, int_data, cpu_load, cpu_store,
     {1'b0, 1'b0, timer_int, lcdc_int, vblank_int},
-    intreq, intaddress, intack, 
+    int_req, int_address, int_ack, 
     dints
 );
 
   
 // CPU //  
+wire [15:0] cpu_address;
+wire [7:0] cpu_outdata;
+reg [7:0] cpu_indata;
+wire cpu_load;
+wire cpu_store;
+
 wire [15:0] du;
 wire [3:0] df;
 wire [15:0] daf;
@@ -307,8 +361,8 @@ wire [15:0] dpc;
 
 lr35902 cpu(
     clockgb, resetn, 
-    address, indata, outdata, load, store, 
-    intreq, intaddress, intack,
+    cpu_address, cpu_indata, cpu_outdata, cpu_load, cpu_store, 
+    int_req, int_address, int_ack,
     du, df, daf, dbc, dde, dhl, dsp, dpc
 );
 
@@ -317,8 +371,10 @@ lr35902 cpu(
 assign LEDR[9:5] = dints;
 assign LEDR[1:0] = dmode;
 assign LEDG[7:4] = df;
-assign LEDG[1] = load;
-assign LEDG[0] = store;
+//assign LEDG[3] = dma_load;
+//assign LEDG[2] = dma_store;
+assign LEDG[1] = cpu_load;
+assign LEDG[0] = cpu_store;
 
 reg [15:0] debug;
 seg16 segs(debug, {HEX3,HEX2,HEX1,HEX0});
