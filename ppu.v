@@ -203,45 +203,88 @@ always @(posedge clockgb) begin
 end
 
 
+reg [10:0] bg_address;
+reg [10:0] w_address;
+
+always @(*) begin
+    if (bgram_store || bgram_load) begin
+        bg_address = bgram_address[10:0];
+        w_address = bgram_address[10:0];
+    end else begin
+        bg_address = {bg_ypre[7:3], bg_xpre[7:3]};
+        w_address = {w_ypre[7:3], w_xpre[7:3]};
+    
+        if (lcdc[3]) begin
+            bg_address = bg_address + 11'h400;
+        end
+        
+        if (lcdc[6]) begin
+            w_address = w_address + 11'h400;
+        end
+    end
+end
+
+always @(posedge clockgb) begin
+    bgram_outdata <= bg_tile;
+end
 
 bgram bgram(
-	bg_store ? bg_address[10:0] : {bg_ypre[7:3], bg_xpre[7:3]},
-	{w_ypre[7:3], w_xpre[7:3]},
+	bg_address,	w_address,
 	clockgb,
-	bg_indata,,
-	bg_store, 1'b0,
+	bgram_indata,,
+	bgram_store, 1'b0,
 	bg_tile, w_tile
 );
 
-wire [15:0] bg_address;
-wire [7:0] bg_indata;
-reg  [7:0] bg_outdata;
-wire [7:0] bg_data;
-wire bg_store;
-
-always @(posedge clockgb) begin
-    bg_outdata <= bg_tile;
-end
+wire [15:0] bgram_address;
+wire [7:0] bgram_indata;
+reg  [7:0] bgram_outdata;
+wire [7:0] bgram_data;
+wire bgram_load;
+wire bgram_store;
 
 mmap #(16'h9800, 16'hbfff) bg_mmap(
     clockgb, resetn,
-    address, indata, bg_data, load, store,
-    bg_address, bg_indata, bg_outdata,, bg_store
+    address, indata, bgram_data, load, store,
+    bgram_address, bgram_indata, bgram_outdata, bgram_load, bgram_store
 );
 
 
 wire [7:0] sprite_hi;
 wire [7:0] sprite_lo;
-wire [1:0] sprite_pid = {sprite_hi[3'd7-sprite_x[2]], sprite_lo[3'd7-sprite_x[2]]};
+reg [1:0] sprite_pid;
 wire [7:0] bg_hi;
 wire [7:0] bg_lo;
-wire [1:0] bg_pid = {bg_hi[3'd7-bg_x[2]], bg_lo[3'd7-bg_x[2]]};
+reg [1:0] bg_pid;
 wire [7:0] w_hi;
 wire [7:0] w_lo;
-wire [1:0] w_pid = {w_hi[3'd7-bg_x[2]], w_lo[3'd7-bg_x[2]]};
+reg [1:0] w_pid;
+
+reg [11:0] sprite_tile_offset;
+reg [11:0] bg_tile_offset;
+reg [11:0] w_tile_offset;
+
+always @(*) begin
+    sprite_tile_offset = {1'b0, sprite_tile, sprite_y[0]};
+    bg_tile_offset = {1'b0, bg_tile, bg_y[0]};
+    w_tile_offset = {1'b0, w_tile, w_y[0]};
+    
+    if (!lcdc[4]) begin
+        if (bg_tile_offset < 12'h400) begin
+            bg_tile_offset = bg_tile_offset + 12'h800;
+        end
+        if (w_tile_offset < 12'h400) begin
+            w_tile_offset = w_tile_offset + 12'h800;
+        end
+    end
+    
+    sprite_pid = {sprite_hi[3'd7-sprite_x[2]], sprite_lo[3'd7-sprite_x[2]]};
+    bg_pid = {bg_hi[3'd7-bg_x[2]], bg_lo[3'd7-bg_x[2]]};
+    w_pid = {w_hi[3'd7-bg_x[2]], w_lo[3'd7-bg_x[2]]};
+end
 
 tram sprite_tram(
-	tile_address, {sprite_tile, sprite_y[0]},
+	tile_address, sprite_tile_offset,
     clockgb,
 	tile_indata,,
 	tile_store, 1'b0,
@@ -249,7 +292,7 @@ tram sprite_tram(
 );
 
 tram bg_tram(
-	tile_address, {bg_tile, bg_y[0]},
+	tile_address, bg_tile_offset,
 	clockgb,
 	tile_indata,,
 	tile_store, 1'b0,, 
@@ -257,7 +300,7 @@ tram bg_tram(
 );
 
 tram w_tram(
-	tile_address, {w_tile, w_y[0]},
+	tile_address, w_tile_offset,
 	clockgb,
 	tile_indata,,
 	tile_store, 1'b0,,
@@ -540,7 +583,7 @@ rrmmap #(16'hff4b) wx_mmap(
 );
 
 
-assign outdata = bg_data | tile_data | sprite_data | gbm_data |
+assign outdata = bgram_data | tile_data | sprite_data | gbm_data |
                  lcdc_data | stat_data | scrolly_data | scrollx_data |
                  ly_data | lyc_data | wy_data | wx_data;
 

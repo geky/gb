@@ -231,9 +231,10 @@ timer timer(
 // Joypad over UART //
 wire [7:0] joy_data;
 wire joy_tx;
+wire joy_int;
 
 joypad joypad(
-    clock460800, clockgb, resetn,
+    clock460800, clockgb, resetn, joy_int,
     bus_address, bus_outdata, joy_data, bus_load, bus_store,
     
     //////////// Uart to USB //////////
@@ -337,7 +338,7 @@ wire [4:0] dints;
 inthandle inth(
     clockgb, resetn,
     cpu_address, cpu_outdata, int_data, cpu_load, cpu_store,
-    {1'b0, 1'b0, timer_int, lcdc_int, vblank_int},
+    {joy_int, 1'b0, timer_int, lcdc_int, vblank_int},
     int_req, int_address, int_ack, 
     dints
 );

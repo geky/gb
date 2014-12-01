@@ -1,5 +1,5 @@
 module joypad(
-    clock460800, clockgb, resetn,
+    clock460800, clockgb, resetn, joy_int,
     address, indata, outdata, load, store,
     
     //////////// Uart to USB //////////
@@ -10,6 +10,7 @@ module joypad(
 input clock460800;
 input clockgb;
 input resetn;
+output reg joy_int;
 
 input [15:0] address;
 input [7:0] indata;
@@ -51,13 +52,20 @@ always @(posedge clockgb or negedge resetn) begin
     if (!resetn) begin
         joy_sel <= 0;
         joy_buttons <= 0;
+        joy_int <= 0;
     end else begin
+        joy_int <= 0;
+    
         if (joy_store) begin
             joy_sel <= joy_indata[5:4];
         end
         
         if (uart_recv) begin
             joy_buttons <= uart_data;
+            
+            if (uart_data & ~joy_buttons) begin
+                joy_int <= 1'b1;
+            end
         end
     end
 end
