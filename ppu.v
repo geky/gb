@@ -109,7 +109,7 @@ reg [7:0] sprites [SPRITE_COUNT] [4];
 
 reg [7:0] sprite_tile;
 reg [2:0] sprite_x [3];
-reg [2:0] sprite_y [3];
+reg [3:0] sprite_y [3];
 reg [3:0] sprite_pal [3];
 reg sprite_pri [3];
 reg sprite_val [3];
@@ -134,7 +134,8 @@ always @(posedge clockgb) begin
 
     for (i=SPRITE_COUNT-1; i >= 0; i=i-1) begin
         if (ppu_x[0] >= sprites[i][1]-8'd8 && ppu_x[0] < sprites[i][1]-8'd8+8'h8 &&
-            ppu_y[0] >= sprites[i][0]-8'd16 && ppu_y[0] < sprites[i][0]-8'd16+8'h8) begin
+            ppu_y[0] >= sprites[i][0]-8'd16 && (ppu_y[0] < sprites[i][0]-8'd16+8'h8 || 
+                                                lcdc[2] && ppu_y[0] < sprites[i][0]-8'd16+8'd16)) begin
             
             sprite_tile <= sprites[i][2];
             
@@ -145,9 +146,11 @@ always @(posedge clockgb) begin
             end
             
             if (!sprites[i][3][6]) begin
-                sprite_y[0] <= ppu_y[0][2:0] - sprites[i][0][2:0];
+                sprite_y[0] <= ppu_y[0][3:0] - sprites[i][0][3:0];
+            end else if (lcdc[2]) begin
+                sprite_y[0] <= 4'd15-(ppu_y[0][3:0] - sprites[i][0][3:0]);
             end else begin
-                sprite_y[0] <= 3'd7-(ppu_y[0][2:0] - sprites[i][0][2:0]);
+                sprite_y[0] <= 4'd7-(ppu_y[0][3:0] - sprites[i][0][3:0]);
             end
             
             sprite_pal[0] <= sprites[i][3][4] ? 2'b10 : 2'b01;
@@ -266,7 +269,11 @@ reg [11:0] bg_tile_offset;
 reg [11:0] w_tile_offset;
 
 always @(*) begin
-    sprite_tile_offset = {1'b0, sprite_tile, sprite_y[0]};
+    if (lcdc[2]) begin
+        sprite_tile_offset = {1'b0, sprite_tile[7:1], sprite_y[0][3:0]};
+    end else begin
+        sprite_tile_offset = {1'b0, sprite_tile[7:0], sprite_y[0][2:0]};
+    end
     bg_tile_offset = {1'b0, bg_tile, bg_y[0]};
     w_tile_offset = {1'b0, w_tile, w_y[0]};
     
@@ -344,7 +351,7 @@ end
 reg [7:0] ppu_x [4];
 reg [7:0] ppu_y [4];
 
-reg [2:0] ppu_state;
+reg [1:0] ppu_state;
 reg [15:0] ppu_count;
 wire [1:0] ppu_mode = (ppu_y[0] < HEIGHT) ? ppu_state : 2'h1;
 
