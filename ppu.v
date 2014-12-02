@@ -281,7 +281,7 @@ always @(*) begin
     
     sprite_pid = {sprite_hi[3'd7-sprite_x[2]], sprite_lo[3'd7-sprite_x[2]]};
     bg_pid = {bg_hi[3'd7-bg_x[2]], bg_lo[3'd7-bg_x[2]]};
-    w_pid = {w_hi[3'd7-bg_x[2]], w_lo[3'd7-bg_x[2]]};
+    w_pid = {w_hi[3'd7-w_x[2]], w_lo[3'd7-w_x[2]]};
 end
 
 tram sprite_tram(
@@ -324,13 +324,13 @@ mmap #(16'h8000, 16'h97ff) tile_mmap(
 reg [5:0] ppu_id;
 
 always @(*) begin
-    if (sprite_pri[2] && lcdc[0] && lcdc[5] && w_val[2] && w_id != 0) begin
+    if (sprite_pri[2] && lcdc[0] && lcdc[5] && w_val[2] && w_id[1:0] != 0) begin
         ppu_id = w_id;
-    end else if (sprite_pri[2] && lcdc[0] && bg_id != 0) begin
+    end else if (sprite_pri[2] && lcdc[0] && bg_id[1:0] != 0) begin
         ppu_id = bg_id;
-    end else if (lcdc[1] && sprite_val[2] && sprite_id != 0) begin
+    end else if (lcdc[1] && sprite_val[2] && sprite_id[1:0] != 0) begin
         ppu_id = sprite_id;
-    end else if (lcdc[0] && lcdc[5] && w_val[2] && w_id != 0) begin
+    end else if (lcdc[0] && lcdc[5] && w_val[2]) begin
         ppu_id = w_id;
     end else if (lcdc[0]) begin
         ppu_id = bg_id;
@@ -346,7 +346,7 @@ reg [7:0] ppu_y [4];
 
 reg [2:0] ppu_state;
 reg [15:0] ppu_count;
-wire [2:0] ppu_mode = (ppu_y[0] < HEIGHT) ? ppu_state : 2'h1;
+wire [1:0] ppu_mode = (ppu_y[0] < HEIGHT) ? ppu_state : 2'h1;
 
 wire vblank = ppu_y[0] == HEIGHT;
 wire coin = ppu_y[0] == lyc;

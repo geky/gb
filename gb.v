@@ -211,7 +211,7 @@ wire boot_active;
 
 boot boot(
     clockgb, resetn,
-    bus_address, bus_indata, boot_data, bus_load, bus_store,
+    bus_address, bus_outdata, boot_data, bus_load, bus_store,
     boot_active
 );
 
