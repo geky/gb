@@ -330,7 +330,7 @@ always @(*) begin
         ppu_id = bg_id;
     end else if (lcdc[1] && sprite_val[2] && sprite_id != 0) begin
         ppu_id = sprite_id;
-    end else if (lcdc[0] && lcdc[5] && w_val[2]) begin
+    end else if (lcdc[0] && lcdc[5] && w_val[2] && w_id != 0) begin
         ppu_id = w_id;
     end else if (lcdc[0]) begin
         ppu_id = bg_id;
