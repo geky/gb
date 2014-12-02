@@ -1,4 +1,4 @@
-module lr_alu(d, op, a, b, f, nf);
+module z80_alu(d, op, a, b, f, nf);
 
 input [4:0] op;
 input [15:0] a;

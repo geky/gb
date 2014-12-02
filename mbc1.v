@@ -90,13 +90,11 @@ end
 
 
 wire [15:0] rom_address;
-wire [7:0] rom_data;
-wire rom_store;
 
 mmap #(16'h0000, 16'h7fff) rom_mmap(
     clockgb, resetn,
     address, indata, outdata, load, store,
-    rom_address,, sram_data,, rom_store
+    rom_address,, sram_data
 );
 
 wire [7:0] bank_indata;

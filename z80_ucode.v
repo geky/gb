@@ -1,4 +1,4 @@
-module lr_ucode(u, clock, resetn, ucode);
+module z80_ucode(u, clock, resetn, ucode);
 
 input [15:0] u;
 input clock;

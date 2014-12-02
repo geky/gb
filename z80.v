@@ -1,4 +1,4 @@
-module lr35902(
+module z80(
     clock4, resetn, 
     address, indata, outdata, load, store,
     intreq, intaddress, intack,
@@ -39,7 +39,7 @@ wire [4:0] uc_cc;
 
 reg ie;
 
-lr_ucode uc(u, clock4, resetn, {uc_u, uc_d, uc_op, uc_a, uc_b, load, store, uc_cc});
+z80_ucode uc(u, clock4, resetn, {uc_u, uc_d, uc_op, uc_a, uc_b, load, store, uc_cc});
 
 always @(*) begin
     if (intreq && ie && (uc_u[7:0] == 8'h00 || uc_u[7:0] == 8'h70)) begin
@@ -73,7 +73,7 @@ reg [15:0] bus_b;
 wire [15:0] bus_d;
 wire [3:0] nf;
 
-lr_alu alu(bus_d, uc_op, bus_a, bus_b, f, nf);
+z80_alu alu(bus_d, uc_op, bus_a, bus_b, f, nf);
 
 
 always @(*) begin
@@ -149,7 +149,7 @@ end
 
 always @(posedge clock4 or negedge resetn) begin
     if (!resetn) begin
-        pc <= 16'h0100;
+        pc <= 16'h0000;
         sp <= 16'hfffe;
         a <= 8'h01; // 8'h11 for gbc
         f <= 4'hb;

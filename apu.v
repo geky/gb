@@ -39,18 +39,14 @@ always @(*) begin
     right = 0;
     
     if (nr52[7]) begin
-        if (nr50[7]) begin
-            if (nr51[7]) left = left + nr4_output;
-            if (nr51[6]) left = left + nr3_output;
-            if (nr51[5]) left = left + nr2_output;
-            if (nr51[4]) left = left + nr1_output;
-        end
-        if (nr50[3]) begin
-            if (nr51[3]) right = right + nr4_output;
-            if (nr51[2]) right = right + nr3_output;
-            if (nr51[1]) right = right + nr2_output;
-            if (nr51[0]) right = right + nr1_output;
-        end
+        if (nr51[7]) left = left + nr4_output;
+        if (nr51[6]) left = left + nr3_output;
+        if (nr51[5]) left = left + nr2_output;
+        if (nr51[4]) left = left + nr1_output;
+        if (nr51[3]) right = right + nr4_output;
+        if (nr51[2]) right = right + nr3_output;
+        if (nr51[1]) right = right + nr2_output;
+        if (nr51[0]) right = right + nr1_output;
     end
 end
 

@@ -184,7 +184,11 @@ always @(*) begin
         bus_load = cpu_load;
         bus_store = cpu_store;
         
-        cpu_indata = cpu_data | bus_data;
+        if (boot_active) begin
+            cpu_indata = boot_data;
+        end else begin
+            cpu_indata = cpu_data | bus_data;
+        end
         dma_indata = 0;
     end else begin
         bus_address = dma_address;
@@ -199,6 +203,17 @@ end
 
 
 assign UART_TX = link_tx & rom_tx & joy_tx;
+
+
+// Boot ROM //
+wire [7:0] boot_data;
+wire boot_active;
+
+boot boot(
+    clockgb, resetn,
+    bus_address, bus_indata, boot_data, bus_load, bus_store,
+    boot_active
+);
 
 
 // PPU //
@@ -303,7 +318,7 @@ dma dma(
 wire [7:0] rom_data;
 wire rom_tx;
 
-mbc1 cart_rom(
+mbc1 mbc1(
     SW[9] ? clock4mhz : clockgb, clock115200hz, clock4mhz60800hz, resetn, 
     bus_address, bus_outdata, rom_data, bus_load, bus_store, SW[9],
 
@@ -398,7 +413,7 @@ wire [15:0] dhl;
 wire [15:0] dsp;
 wire [15:0] dpc;
 
-lr35902 cpu(
+z80 cpu(
     clockgb, resetn, 
     cpu_address, cpu_indata, cpu_outdata, cpu_load, cpu_store, 
     int_req, int_address, int_ack,
