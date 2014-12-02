@@ -42,7 +42,7 @@ output SRAM_OE_n;
 output SRAM_WE_n;
 
 
-reg [15:0] sram_address;
+reg [18:0] sram_address;
 wire [7:0] sram_data;
 
 sram cart_sram(
@@ -64,11 +64,11 @@ sram cart_sram(
 );
 
 
-reg [1:0] bank;
+reg [4:0] bank;
 
 always @(*) begin
     if (rom_address < 16'h4000) begin
-        sram_address = rom_address;
+        sram_address = {5'b0, rom_address[13:0]};
     end else begin
         sram_address = {bank, rom_address[13:0]};
     end
@@ -76,13 +76,13 @@ end
 
 always @(posedge clockgb or negedge resetn) begin
     if (!resetn) begin
-        bank <= 2'b1;
+        bank <= 5'b1;
     end else begin
         if (bank_store) begin
             if (bank_indata == 0) begin
-                bank <= 2'b1;
+                bank <= 5'b1;
             end else begin
-                bank <= bank_indata[1:0];
+                bank <= bank_indata[4:0];
             end
         end
     end

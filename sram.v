@@ -21,7 +21,7 @@ input clock115200;
 input clock460800;
 input resetn;
 
-input [15:0] address;
+input [18:0] address;
 input [7:0] indata;
 output reg [7:0] outdata;
 input load;
@@ -61,8 +61,8 @@ uartrx comm_uart (clock460800, resetn, uart_data, uart_recv, UART_RX);
 uarttx check_uart (clock115200, resetn, uart_data, uart_recv, , UART_TX);
 
 
-reg [18:0] flash_address;
-reg [18:0] flash_count;
+reg [31:0] flash_address;
+reg [31:0] flash_count;
 reg [3:0] flash_state;
 
 always @(posedge clock4 or negedge resetn) begin
@@ -94,7 +94,7 @@ always @(posedge clock4 or negedge resetn) begin
                 end else begin
                     flash_address <= flash_address + 1'b1;
                     flash_count <= flash_count - 1'b1;
-                    ram_address <= flash_address;
+                    ram_address <= flash_address[18:0];
                     ram_outdata <= uart_data;
                     ram_load <= 1'b0;
                     ram_store <= 1'b1;
@@ -103,7 +103,6 @@ always @(posedge clock4 or negedge resetn) begin
             endcase
         end
     end else begin
-        // TODO
         ram_address <= address;
         ram_outdata <= indata;
         ram_load <= load;
