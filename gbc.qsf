@@ -353,6 +353,11 @@ set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "2.5 V"
+set_global_assignment -name OPTIMIZE_HOLD_TIMING "ALL PATHS"
+set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
+set_global_assignment -name FITTER_EFFORT "FAST FIT"
+set_global_assignment -name PHYSICAL_SYNTHESIS_EFFORT NORMAL
+set_global_assignment -name VERILOG_FILE audio.v
 set_global_assignment -name VERILOG_FILE uart.v
 set_global_assignment -name VERILOG_FILE sram.v
 set_global_assignment -name VERILOG_FILE seg7.v
@@ -370,14 +375,11 @@ set_global_assignment -name QIP_FILE vram.qip
 set_global_assignment -name QIP_FILE bgram.qip
 set_global_assignment -name QIP_FILE tram.qip
 set_global_assignment -name VERILOG_FILE mmap.v
-set_global_assignment -name OPTIMIZE_HOLD_TIMING "ALL PATHS"
-set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
-set_global_assignment -name FITTER_EFFORT "FAST FIT"
-set_global_assignment -name PHYSICAL_SYNTHESIS_EFFORT NORMAL
 set_global_assignment -name QIP_FILE loram.qip
 set_global_assignment -name QIP_FILE hiram.qip
 set_global_assignment -name VERILOG_FILE inthandle.v
 set_global_assignment -name VERILOG_FILE timer.v
 set_global_assignment -name VERILOG_FILE dma.v
 set_global_assignment -name VERILOG_FILE joypad.v
+set_global_assignment -name VERILOG_FILE apu.v
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

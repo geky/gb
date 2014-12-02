@@ -1,5 +1,5 @@
 module ppu(
-    clock25, clockgb, resetn, vblank_int, lcdc_int,
+    clock25, clockgb, hard_resetn, resetn, vblank_int, lcdc_int,
     address, indata, outdata, load, store,
     
 	//////////// HDMI-TX //////////
@@ -26,6 +26,7 @@ parameter SPRITE_COUNT = 40;
 
 input clock25;
 input clockgb;
+input hard_resetn;
 input resetn;
 output reg vblank_int;
 output reg lcdc_int;
@@ -53,7 +54,7 @@ wire [7:0] g;
 wire [7:0] b;
   
 hdmi #(4) display(
-    clock25, resetn,
+    clock25, hard_resetn,
     x, y,
     r, g, b,
     
