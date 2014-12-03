@@ -425,8 +425,8 @@ z80 cpu(
 assign LEDR[9:5] = dints;
 assign LEDR[1:0] = dmode;
 assign LEDG[7:4] = df;
-//assign LEDG[3] = dma_load;
-//assign LEDG[2] = dma_store;
+assign LEDG[3] = dma_load;
+assign LEDG[2] = dma_store;
 assign LEDG[1] = cpu_load;
 assign LEDG[0] = cpu_store;
 

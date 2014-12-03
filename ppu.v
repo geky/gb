@@ -133,9 +133,9 @@ always @(posedge clockgb) begin
     sprite_val[0] <= 0;
 
     for (i=SPRITE_COUNT-1; i >= 0; i=i-1) begin
-        if (ppu_x[0] >= sprites[i][1]-8'd8 && ppu_x[0] < sprites[i][1]-8'd8+8'h8 &&
-            ppu_y[0] >= sprites[i][0]-8'd16 && (ppu_y[0] < sprites[i][0]-8'd16+8'h8 || 
-                                                lcdc[2] && ppu_y[0] < sprites[i][0]-8'd16+8'd16)) begin
+        if (ppu_x[0]+8'd8 >= sprites[i][1] && ppu_x[0]+8'd8 < sprites[i][1]+8'h8 &&
+            ppu_y[0]+8'd16 >= sprites[i][0] && (ppu_y[0]+8'd16 < sprites[i][0]+8'h8 || 
+                                                lcdc[2] && ppu_y[0]+8'd16 < sprites[i][0]+8'd16)) begin
             
             sprite_tile <= sprites[i][2];
             
@@ -201,7 +201,7 @@ always @(posedge clockgb) begin
     w_pal[0] <= 0;
     w_pal[1] <= w_pal[0];
     w_pal[2] <= w_pal[1];
-    w_val[0] <= (ppu_x[0] >= wx && ppu_y[0] >= wy);
+    w_val[0] <= (ppu_x[0]+8'd7 >= wx+8'd7 && ppu_y[0] >= wy);
     w_val[1] <= w_val[0];
     w_val[2] <= w_val[1];
 end

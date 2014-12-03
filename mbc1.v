@@ -90,10 +90,11 @@ end
 
 
 wire [15:0] rom_address;
+wire [7:0] rom_data;
 
 mmap #(16'h0000, 16'h7fff) rom_mmap(
     clockgb, resetn,
-    address, indata, outdata, load, store,
+    address, indata, rom_data, load, store,
     rom_address,, sram_data
 );
 
@@ -105,5 +106,28 @@ mmap #(16'h2000, 16'h3fff) bank_mmap(
     address, indata,, load, store,, 
     bank_indata,,, bank_store
 );
+
+// Low RAM (Large) //
+wire [15:0] ram_address;
+wire [7:0] ram_indata;
+wire [7:0] ram_outdata;
+wire [7:0] ram_data;
+wire ram_store;
+
+mbc1ram ram(
+	ram_address[12:0],
+	clockgb,
+	ram_indata,
+	ram_store,
+	ram_outdata
+);
+
+mmap #(16'ha000, 16'hbfff) ram_mmap(
+    clockgb, resetn,
+    address, outdata, ram_data, load, store,
+    ram_address, ram_indata, ram_outdata,, ram_store
+);
+
+assign outdata = rom_data | ram_data;
 
 endmodule
