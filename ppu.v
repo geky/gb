@@ -107,55 +107,63 @@ assign b = {p_color[14:10], 2'h0};
 
 reg [7:0] sprites [SPRITE_COUNT] [4];
 
-reg [7:0] sprite_tile;
-reg [2:0] sprite_x [3];
-reg [3:0] sprite_y [3];
-reg [3:0] sprite_pal [3];
-reg sprite_pri [3];
-reg sprite_val [3];
-wire [5:0] sprite_id = {sprite_pal[2], sprite_pid};
+reg [7:0] sprite_tile [SPRITE_COUNT];
+reg [2:0] sprite_x [SPRITE_COUNT] [3];
+reg [3:0] sprite_y [SPRITE_COUNT] [3];
+reg [3:0] sprite_pal [SPRITE_COUNT] [3];
+reg sprite_pri [SPRITE_COUNT] [3];
+reg sprite_val [SPRITE_COUNT] [3];
 
+reg [5:0] sprite_id [SPRITE_COUNT];
+
+always @(*) begin
+    integer i;
+    for (i=0; i < SPRITE_COUNT; i=i+1) begin
+        sprite_id[i] = {sprite_pal[i][2], sprite_pid[i]};
+    end
+end
 
 always @(posedge clockgb) begin
     integer i;
+    for (i=0; i < SPRITE_COUNT; i=i+1) begin
+        sprite_x[i][1] <= sprite_x[i][0];
+        sprite_y[i][1] <= sprite_y[i][0];
+        sprite_pal[i][1] <= sprite_pal[i][0];
+        sprite_pri[i][1] <= sprite_pri[i][0];
+        sprite_val[i][1] <= sprite_val[i][0];
+        sprite_x[i][2] <= sprite_x[i][1];
+        sprite_y[i][2] <= sprite_y[i][1];
+        sprite_pal[i][2] <= sprite_pal[i][1];
+        sprite_pri[i][2] <= sprite_pri[i][1];
+        sprite_val[i][2] <= sprite_val[i][1];
     
-    sprite_x[1] <= sprite_x[0];
-    sprite_x[2] <= sprite_x[1];
-    sprite_y[1] <= sprite_y[0];
-    sprite_y[2] <= sprite_y[1];
-    sprite_pal[1] <= sprite_pal[0];
-    sprite_pal[2] <= sprite_pal[1];
-    sprite_pri[1] <= sprite_pri[0];
-    sprite_pri[2] <= sprite_pri[1];
-    sprite_val[1] <= sprite_val[0];
-    sprite_val[2] <= sprite_val[1];
-    
-    sprite_val[0] <= 0;
-
-    for (i=SPRITE_COUNT-1; i >= 0; i=i-1) begin
+        sprite_val[i][0] <= 0;
+        
         if (ppu_x[0]+8'd8 >= sprites[i][1] && ppu_x[0]+8'd8 < sprites[i][1]+8'h8 &&
             ppu_y[0]+8'd16 >= sprites[i][0] && (ppu_y[0]+8'd16 < sprites[i][0]+8'h8 || 
                                                 lcdc[2] && ppu_y[0]+8'd16 < sprites[i][0]+8'd16)) begin
             
-            sprite_tile <= sprites[i][2];
+            sprite_tile[i] <= sprites[i][2];
             
             if (!sprites[i][3][5]) begin
-                sprite_x[0] <= ppu_x[0][2:0] - sprites[i][1][2:0];
+                sprite_x[i][0] <= ppu_x[0][2:0] - sprites[i][1][2:0];
             end else begin
-                sprite_x[0] <= 3'd7-(ppu_x[0][2:0] - sprites[i][1][2:0]);
+                sprite_x[i][0] <= 3'd7-(ppu_x[0][2:0] - sprites[i][1][2:0]);
             end
             
             if (!sprites[i][3][6]) begin
-                sprite_y[0] <= ppu_y[0][3:0] - sprites[i][0][3:0];
+                sprite_y[i][0] <= ppu_y[0][3:0] - sprites[i][0][3:0];
             end else if (lcdc[2]) begin
-                sprite_y[0] <= 4'd15-(ppu_y[0][3:0] - sprites[i][0][3:0]);
+                sprite_y[i][0] <= 4'd15-(ppu_y[0][3:0] - sprites[i][0][3:0]);
             end else begin
-                sprite_y[0] <= 4'd7-(ppu_y[0][3:0] - sprites[i][0][3:0]);
+                sprite_y[i][0] <= 4'd7-(ppu_y[0][3:0] - sprites[i][0][3:0]);
             end
             
-            sprite_pal[0] <= sprites[i][3][4] ? 2'b10 : 2'b01;
-            sprite_pri[0] <= sprites[i][3][7];
-            sprite_val[0] <= 1'b1;
+            sprite_pal[i][0] <= sprites[i][3][4] ? 2'b10 : 2'b01;
+            sprite_pri[i][0] <= sprites[i][3][7];
+            sprite_val[i][0] <= 1'b1;
+        end else begin
+            sprite_val[i][0] <= 1'b0;
         end
     end
 end
@@ -171,13 +179,13 @@ wire [5:0] bg_id = {bg_pal[2], bg_pid};
 
 always @(posedge clockgb) begin
     bg_x[0] <= bg_xpre[2:0];
-    bg_x[1] <= bg_x[0];
-    bg_x[2] <= bg_x[1];
     bg_y[0] <= bg_ypre[2:0];
-    bg_y[1] <= bg_y[0];
-    bg_y[2] <= bg_y[1];
     bg_pal[0] <= 0;
+    bg_x[1] <= bg_x[0];
+    bg_y[1] <= bg_y[0];
     bg_pal[1] <= bg_pal[0];
+    bg_x[2] <= bg_x[1];
+    bg_y[2] <= bg_y[1];
     bg_pal[2] <= bg_pal[1];
 end
 
@@ -193,16 +201,16 @@ wire [5:0] w_id = {w_pal[2], w_pid};
 
 always @(posedge clockgb) begin
     w_x[0] <= w_xpre[2:0];
-    w_x[1] <= w_x[0];
-    w_x[2] <= w_x[1];
     w_y[0] <= w_ypre[2:0];
-    w_y[1] <= w_y[0];
-    w_y[2] <= w_y[1];
     w_pal[0] <= 0;
-    w_pal[1] <= w_pal[0];
-    w_pal[2] <= w_pal[1];
     w_val[0] <= (ppu_x[0]+8'd7 >= wx+8'd7 && ppu_y[0] >= wy);
+    w_x[1] <= w_x[0];
+    w_y[1] <= w_y[0];
+    w_pal[1] <= w_pal[0];
     w_val[1] <= w_val[0];
+    w_x[2] <= w_x[1];
+    w_y[2] <= w_y[1];
+    w_pal[2] <= w_pal[1];
     w_val[2] <= w_val[1];
 end
 
@@ -254,9 +262,9 @@ mmap #(16'h9800, 16'hbfff) bg_mmap(
 );
 
 
-wire [7:0] sprite_hi;
-wire [7:0] sprite_lo;
-reg [1:0] sprite_pid;
+wire [7:0] sprite_hi [SPRITE_COUNT];
+wire [7:0] sprite_lo [SPRITE_COUNT];
+reg [1:0] sprite_pid [SPRITE_COUNT];
 wire [7:0] bg_hi;
 wire [7:0] bg_lo;
 reg [1:0] bg_pid;
@@ -264,16 +272,20 @@ wire [7:0] w_hi;
 wire [7:0] w_lo;
 reg [1:0] w_pid;
 
-reg [11:0] sprite_tile_offset;
+reg [11:0] sprite_tile_offset [SPRITE_COUNT];
 reg [11:0] bg_tile_offset;
 reg [11:0] w_tile_offset;
 
 always @(*) begin
-    if (lcdc[2]) begin
-        sprite_tile_offset = {1'b0, sprite_tile[7:1], sprite_y[0][3:0]};
-    end else begin
-        sprite_tile_offset = {1'b0, sprite_tile[7:0], sprite_y[0][2:0]};
+    integer i;
+    for (i=0; i < SPRITE_COUNT; i=i+1) begin
+        if (lcdc[2]) begin
+            sprite_tile_offset[i] = {1'b0, sprite_tile[i][7:1], sprite_y[i][0][3:0]};
+        end else begin
+            sprite_tile_offset[i] = {1'b0, sprite_tile[i][7:0], sprite_y[i][0][2:0]};
+        end
     end
+    
     bg_tile_offset = {1'b0, bg_tile, bg_y[0]};
     w_tile_offset = {1'b0, w_tile, w_y[0]};
     
@@ -286,25 +298,33 @@ always @(*) begin
         end
     end
     
-    sprite_pid = {sprite_hi[3'd7-sprite_x[2]], sprite_lo[3'd7-sprite_x[2]]};
+    for (i=0; i < SPRITE_COUNT; i=i+1) begin
+        sprite_pid[i] = {sprite_hi[i][3'd7-sprite_x[i][2]], sprite_lo[i][3'd7-sprite_x[i][2]]};
+    end
     bg_pid = {bg_hi[3'd7-bg_x[2]], bg_lo[3'd7-bg_x[2]]};
     w_pid = {w_hi[3'd7-w_x[2]], w_lo[3'd7-w_x[2]]};
 end
 
-tram sprite_tram(
-	tile_address, sprite_tile_offset,
-    clockgb,
-	tile_indata,,
-	tile_store, 1'b0,
-	tile_outdata, {sprite_hi, sprite_lo}
-);
+
+generate
+genvar i;
+    for (i=0; i < SPRITE_COUNT; i=i+1) begin : SPRITE_TILE_LOOP
+        tram sprite_tram(
+            tile_address, sprite_tile_offset[i],
+            clockgb,
+            tile_indata,,
+            tile_store, 1'b0,, 
+            {sprite_hi[i], sprite_lo[i]}
+        );
+    end
+endgenerate
 
 tram bg_tram(
 	tile_address, bg_tile_offset,
 	clockgb,
 	tile_indata,,
-	tile_store, 1'b0,, 
-    {bg_hi, bg_lo}
+	tile_store, 1'b0,
+    tile_outdata, {bg_hi, bg_lo}
 );
 
 tram w_tram(
@@ -329,14 +349,31 @@ mmap #(16'h8000, 16'h97ff) tile_mmap(
 
 
 reg [5:0] ppu_id;
+reg [5:0] topsprite_id;
+reg topsprite_val;
+reg topsprite_pri;
 
 always @(*) begin
-    if (sprite_pri[2] && lcdc[0] && lcdc[5] && w_val[2] && w_id[1:0] != 0) begin
+    integer i;
+
+    topsprite_id = 0;
+    topsprite_val = 0;
+    topsprite_pri = 0;
+    
+    for (i=SPRITE_COUNT-1; i >= 0; i=i-1) begin
+        if (sprite_val[i][2] && sprite_id[i][1:0] != 0) begin
+            topsprite_id = sprite_id[i];
+            topsprite_pri = sprite_pri[i][2];
+            topsprite_val = 1'b1;
+        end
+    end
+    
+    if (topsprite_pri && lcdc[0] && lcdc[5] && w_val[2] && w_id[1:0] != 0) begin
         ppu_id = w_id;
-    end else if (sprite_pri[2] && lcdc[0] && bg_id[1:0] != 0) begin
+    end else if (topsprite_pri && lcdc[0] && bg_id[1:0] != 0) begin
         ppu_id = bg_id;
-    end else if (lcdc[1] && sprite_val[2] && sprite_id[1:0] != 0) begin
-        ppu_id = sprite_id;
+    end else if (lcdc[1] && topsprite_val && topsprite_id[1:0] != 0) begin
+        ppu_id = topsprite_id;
     end else if (lcdc[0] && lcdc[5] && w_val[2]) begin
         ppu_id = w_id;
     end else if (lcdc[0]) begin
@@ -392,10 +429,10 @@ always @(posedge clockgb or negedge resetn) begin
         lcdc_int <= 0;
     end else begin
         ppu_x[1] <= ppu_x[0];
-        ppu_x[2] <= ppu_x[1];
-        ppu_x[3] <= ppu_x[2];
         ppu_y[1] <= ppu_y[0];
+        ppu_x[2] <= ppu_x[1];
         ppu_y[2] <= ppu_y[1];
+        ppu_x[3] <= ppu_x[2];
         ppu_y[3] <= ppu_y[2];
         vblank_int <= 0;
         lcdc_int <= 0;
