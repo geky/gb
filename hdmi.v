@@ -1,5 +1,5 @@
 module hdmi(
-    clock25, resetn,
+    clock25mhz, resetn,
     x, y,
     r, g, b,
     
@@ -19,21 +19,23 @@ parameter HEIGHT = 144;
 parameter XDIV = 3;
 parameter YDIV = 3;
 parameter XSTART = 80;
-parameter XEND = XSTART + XDIV*WIDTH;
 parameter YSTART = 24;
+parameter XEND = XSTART + XDIV*WIDTH;
 parameter YEND = YSTART + YDIV*HEIGHT;
 
 parameter HSIZE = 640;
 parameter VSIZE = 480;
 parameter HTOTAL = 800;
 parameter VTOTAL = 525;
-parameter HSTART = 141;
-parameter HEND = HSTART + HSIZE;
+parameter HSYNC = 96;
+parameter VSYNC = 2;
+parameter HSTART = 144;
 parameter VSTART = 34;
+parameter HEND = HSTART + HSIZE;
 parameter VEND = VSTART + VSIZE;
 
 
-input clock25;
+input clock25mhz;
 input resetn;
 output reg [11:0] x;
 output reg [11:0] y;
@@ -41,16 +43,18 @@ input [7:0] r;
 input [7:0] g;
 input [7:0] b;
 
-output HDMI_TX_CLK = clock25;
+output HDMI_TX_CLK = ~clock25mhz;
 output [23:0] HDMI_TX_D = hdmi_data;
 output HDMI_TX_DE = hdmi_de[1];
-output HDMI_TX_HS = hdmi_hsync;
-output HDMI_TX_VS = hdmi_vsync;
+output HDMI_TX_HS = hdmi_hsync[1];
+output HDMI_TX_VS = hdmi_vsync[1];
 input HDMI_TX_INT;
 
 
 reg [23:0] hdmi_data;
-reg [1:0] hdmi_de;
+reg hdmi_de [2];
+reg hdmi_hsync [2];
+reg hdmi_vsync [2];
 
 reg [11:0] hdmi_hprecount;
 reg [11:0] hdmi_vprecount;
@@ -59,17 +63,26 @@ reg [11:0] hdmi_vcount;
 wire hdmi_hactive = hdmi_hcount >= HSTART && hdmi_hcount < HEND;
 wire hdmi_vactive = hdmi_vcount >= VSTART && hdmi_vcount < VEND;
 wire hdmi_active = hdmi_hactive && hdmi_vactive;
-wire hdmi_hsync = hdmi_hcount >= HEND;
-wire hdmi_vsync = hdmi_vcount >= VEND;
+wire hdmi_hpresync = ~(hdmi_hcount < HSYNC);
+wire hdmi_vpresync = ~(hdmi_vcount < VSYNC);
 
-always @(posedge clock25 or negedge resetn) begin
+always @(posedge clock25mhz or negedge resetn) begin
     if (!resetn) begin
-        hdmi_de <= 0;
+        hdmi_de[0] <= 0; 
+        hdmi_de[1] <= 0;
+        hdmi_hsync[0] <= 0;
+        hdmi_hsync[1] <= 0;
+        hdmi_vsync[0] <= 0;
+        hdmi_vsync[1] <= 0;
         hdmi_hcount <= 0;
         hdmi_vcount <= 0;
     end else begin
-        hdmi_de[1] <= hdmi_de[0];
         hdmi_de[0] <= hdmi_active;
+        hdmi_de[1] <= hdmi_de[0];
+        hdmi_hsync[0] <= hdmi_hpresync;
+        hdmi_hsync[1] <= hdmi_hsync[0];
+        hdmi_vsync[0] <= hdmi_vpresync;
+        hdmi_vsync[1] <= hdmi_vsync[0];
     
         if (hdmi_hcount + 1'b1 == HTOTAL) begin
             hdmi_hcount <= 0;
@@ -94,7 +107,7 @@ wire ysetup = hdmi_vcount >= VSTART+YSTART && hdmi_vcount < VSTART+YEND;
 reg [$clog2(XDIV)-1:0] xcount;
 reg [$clog2(YDIV)-1:0] ycount;
 
-always @(posedge clock25 or negedge resetn) begin
+always @(posedge clock25mhz or negedge resetn) begin
     if (!resetn) begin
         hdmi_data <= 0;
         xcount <= 0;

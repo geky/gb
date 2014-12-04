@@ -130,6 +130,7 @@ output		          		SRAM_UB_n;
 output		          		SRAM_WE_n;
 
 
+
 // Clocking //
 wire clock50mhz = CLOCK_50_B5B;
 
@@ -444,6 +445,6 @@ always @(*) begin
     4'b0100: debug = dtimer;
     default: debug = du;
     endcase
-end  
+end
  
 endmodule
