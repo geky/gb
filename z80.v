@@ -1,11 +1,11 @@
 module z80(
-    clock4, resetn, 
+    clock, resetn, 
     address, indata, outdata, load, store,
     intreq, intaddress, intack,
     du, df, daf, dbc, dde, dhl, dsp, dpc
 );
 
-input clock4;
+input clock;
 input resetn;
 
 output [15:0] address = bus_a;
@@ -39,7 +39,7 @@ wire [4:0] uc_cc;
 
 reg ie;
 
-z80_ucode uc(u, clock4, resetn, {uc_u, uc_d, uc_op, uc_a, uc_b, load, store, uc_cc});
+z80_ucode uc(u, clock, resetn, {uc_u, uc_d, uc_op, uc_a, uc_b, load, store, uc_cc});
 
 always @(*) begin
     if (intreq && ie && (uc_u[7:0] == 8'h00 || uc_u[7:0] == 8'h70)) begin
@@ -147,7 +147,7 @@ always @(*) begin
     endcase
 end
 
-always @(posedge clock4 or negedge resetn) begin
+always @(posedge clock or negedge resetn) begin
     if (!resetn) begin
         pc <= 16'h0000;
         sp <= 16'hfffe;

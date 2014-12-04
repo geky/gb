@@ -142,14 +142,14 @@ wire clock1mhz;
 wire clock250khz;
 wire clock62500hz;
 wire clock115200hz;
-wire clock4mhz60800hz;
+wire clock460800hz;
 
 div #(2) div25mhz(clock50mhz, clock25mhz);
 div #(4) div12500khz(clock50mhz, clock12500khz);
 div #(6) div8mhz(clock50mhz, clock8mhz);
 div #(12) div4mhz(clock50mhz, clock4mhz);
-div #(432) div115200hz(clock50mhz, clock115200hz); // previously 434
-div #(432/4) div460800hz(clock50mhz, clock4mhz60800hz);
+div #(434) div115200hz(clock50mhz, clock115200hz); // previously 434
+div #(434/4) div460800hz(clock50mhz, clock460800hz);
 
 div #(4) div1mhz(clock4mhz, clock1mhz);
 div #(4) div250khz(clock1mhz, clock250khz);
@@ -288,7 +288,7 @@ wire joy_tx;
 wire joy_int;
 
 joypad joypad(
-    clock4mhz60800hz, clockgb, resetn, joy_int,
+    clock460800hz, clockgb, resetn, joy_int,
     bus_address, bus_outdata, joy_data, bus_load, bus_store,
     
     //////////// Uart to USB //////////
@@ -320,7 +320,7 @@ wire [7:0] rom_data;
 wire rom_tx;
 
 mbc1 mbc1(
-    SW[9] ? clock4mhz : clockgb, clock115200hz, clock4mhz60800hz, resetn, 
+    SW[9] ? clock4mhz : clockgb, clock115200hz, clock460800hz, resetn, 
     bus_address, bus_outdata, rom_data, bus_load, bus_store, SW[9],
 
     //////////// Uart to USB //////////

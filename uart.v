@@ -3,11 +3,11 @@
 //
 
 module uarttx(
-    clock115200, resetn, data, send, ready,
+    clock115200hz, resetn, data, send, ready,
     UART_TX
 );
 
-input clock115200;
+input clock115200hz;
 input resetn;
 input [7:0] data;
 input send;
@@ -17,7 +17,7 @@ output UART_TX = tx;
 reg tx;
 reg [3:0] state;
 
-always @(posedge clock115200 or negedge resetn) begin
+always @(posedge clock115200hz or negedge resetn) begin
     if (!resetn) begin
         tx <= 1'b1;
         ready <= 0;
@@ -38,11 +38,11 @@ endmodule
 
 
 module cheapuartrx(
-    clock115200, resetn, data, recv,
+    clock115200hz, resetn, data, recv,
     UART_RX
 );
 
-input clock115200;
+input clock115200hz;
 input resetn;
 output reg [7:0] data;
 output reg recv;
@@ -52,7 +52,7 @@ wire rx = UART_RX;
 reg [3:0] state;
 reg [7:0] buffer;
 
-always @(posedge clock115200 or negedge resetn) begin
+always @(posedge clock115200hz or negedge resetn) begin
     if (!resetn) begin
         data <= 0;
         recv <= 0;

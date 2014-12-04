@@ -1,5 +1,5 @@
 module link(
-    clock115200, clockgb, resetn,
+    clock115200hz, clockgb, resetn,
     address, indata, outdata, load, store,
 
     //////////// Uart to USB //////////
@@ -8,7 +8,7 @@ module link(
 );
 
 
-input clock115200;
+input clock115200hz;
 input clockgb;
 input resetn;
 
@@ -29,7 +29,7 @@ reg [3:0] state;
 reg tx;
 
 
-always @(posedge clock115200 or negedge resetn) begin
+always @(posedge clock115200hz or negedge resetn) begin
     if (!resetn) begin
         tx <= 1'b1;
         state <= 0;

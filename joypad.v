@@ -1,5 +1,5 @@
 module joypad(
-    clock460800, clockgb, resetn, joy_int,
+    clock460800hz, clockgb, resetn, joy_int,
     address, indata, outdata, load, store,
     
     //////////// Uart to USB //////////
@@ -7,7 +7,7 @@ module joypad(
     UART_TX
 );
 
-input clock460800;
+input clock460800hz;
 input clockgb;
 input resetn;
 output reg joy_int;
@@ -44,7 +44,7 @@ wire [7:0] uart_data;
 wire uart_recv;
 
 uartrx uartrx(
-    clock460800, resetn, uart_data, uart_recv,
+    clock460800hz, resetn, uart_data, uart_recv,
     UART_RX
 );
 

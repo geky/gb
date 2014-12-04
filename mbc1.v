@@ -1,5 +1,5 @@
 module mbc1(
-    clockgb, clock115200, clock460800, resetn,
+    clockgb, clock115200hz, clock460800hz, resetn,
     address, indata, outdata, load, store, prog,
     
     //////////// Uart to USB //////////
@@ -17,8 +17,8 @@ module mbc1(
 );
 
 input clockgb;
-input clock115200;
-input clock460800;
+input clock115200hz;
+input clock460800hz;
 input resetn;
 
 input [15:0] address;
@@ -46,7 +46,7 @@ reg [18:0] sram_address;
 wire [7:0] sram_data;
 
 sram cart_sram(
-    clockgb, clock115200, clock460800, resetn,
+    clockgb, clock115200hz, clock460800hz, resetn,
     sram_address,, sram_data, load, 1'b0, prog, 
     
     //////////// Uart to USB //////////

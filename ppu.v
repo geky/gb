@@ -1,5 +1,5 @@
 module ppu(
-    clock25, clockgb, hard_resetn, resetn, vblank_int, lcdc_int,
+    clock25mhz, clockgb, hard_resetn, resetn, vblank_int, lcdc_int,
     address, indata, outdata, load, store,
     
 	//////////// HDMI-TX //////////
@@ -24,7 +24,7 @@ parameter MODE1_COUNT = 4560;
 parameter SPRITE_COUNT = 40;
 
 
-input clock25;
+input clock25mhz;
 input clockgb;
 input hard_resetn;
 input resetn;
@@ -54,7 +54,7 @@ wire [7:0] g;
 wire [7:0] b;
   
 hdmi #(4) display(
-    clock25, hard_resetn,
+    clock25mhz, hard_resetn,
     x, y,
     r, g, b,
     
@@ -74,7 +74,7 @@ wire [15:0] p_color = gbm_color[1];
 vram vram(
 	ppu_id,
 	{y, x},
-	clock25,
+	clock25mhz,
 	{ppu_y[3], ppu_x[3]},
 	clockgb,
 	ppu_y[3] < HEIGHT && lcdc[7],
@@ -86,7 +86,7 @@ reg [7:0] gbm_palette [3];
 reg [15:0] gbm_color [2];
 wire [1:0] gbm_shade = gbm_palette[p_id[5:2]][2*p_id[1:0] +: 2];
 
-always @(posedge clock25) begin
+always @(posedge clock25mhz) begin
     case (gbm_shade)
     0: gbm_color[0] <= 16'h67fd;
     1: gbm_color[0] <= 16'h4b55;

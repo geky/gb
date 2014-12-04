@@ -1,5 +1,5 @@
 module sram(
-    clock4, clock115200, clock460800, resetn,
+    clock, clock115200hz, clock460800hz, resetn,
     address, indata, outdata, load, store, prog, 
     
     //////////// Uart to USB //////////
@@ -16,9 +16,9 @@ module sram(
 	SRAM_WE_n
 );
 
-input clock4;
-input clock115200;
-input clock460800;
+input clock;
+input clock115200hz;
+input clock460800hz;
 input resetn;
 
 input [18:0] address;
@@ -57,15 +57,15 @@ wire [7:0] uart_data;
 wire uart_recv;
 reg uart_recv_ack;
 
-uartrx comm_uart (clock460800, resetn, uart_data, uart_recv, UART_RX);
-uarttx check_uart (clock115200, resetn, uart_data, uart_recv, , UART_TX);
+uartrx comm_uart (clock460800hz, resetn, uart_data, uart_recv, UART_RX);
+uarttx check_uart (clock115200hz, resetn, uart_data, uart_recv, , UART_TX);
 
 
 reg [31:0] flash_address;
 reg [31:0] flash_count;
 reg [3:0] flash_state;
 
-always @(posedge clock4 or negedge resetn) begin
+always @(posedge clock or negedge resetn) begin
     if (!resetn) begin
         ram_address <= 0;
         ram_outdata <= 0;
@@ -80,14 +80,14 @@ always @(posedge clock4 or negedge resetn) begin
     
         if (uart_recv && !uart_recv_ack) begin
             case (flash_state)
-            4'h0: begin flash_state <= 4'h1; flash_address <= {flash_address[10:0], uart_data}; end
-            4'h1: begin flash_state <= 4'h2; flash_address <= {flash_address[10:0], uart_data}; end
-            4'h2: begin flash_state <= 4'h3; flash_address <= {flash_address[10:0], uart_data}; end
-            4'h3: begin flash_state <= 4'h4; flash_address <= {flash_address[10:0], uart_data}; end
-            4'h4: begin flash_state <= 4'h5; flash_count <= {flash_count[10:0], uart_data}; end
-            4'h5: begin flash_state <= 4'h6; flash_count <= {flash_count[10:0], uart_data}; end
-            4'h6: begin flash_state <= 4'h7; flash_count <= {flash_count[10:0], uart_data}; end
-            4'h7: begin flash_state <= 4'h8; flash_count <= {flash_count[10:0], uart_data}; end
+            4'h0: begin flash_state <= 4'h1; flash_address <= {flash_address[23:0], uart_data}; end
+            4'h1: begin flash_state <= 4'h2; flash_address <= {flash_address[23:0], uart_data}; end
+            4'h2: begin flash_state <= 4'h3; flash_address <= {flash_address[23:0], uart_data}; end
+            4'h3: begin flash_state <= 4'h4; flash_address <= {flash_address[23:0], uart_data}; end
+            4'h4: begin flash_state <= 4'h5; flash_count <= {flash_count[23:0], uart_data}; end
+            4'h5: begin flash_state <= 4'h6; flash_count <= {flash_count[23:0], uart_data}; end
+            4'h6: begin flash_state <= 4'h7; flash_count <= {flash_count[23:0], uart_data}; end
+            4'h7: begin flash_state <= 4'h8; flash_count <= {flash_count[23:0], uart_data}; end
             4'h8: begin 
                 if (flash_count == 0) begin
                     flash_state <= 4'h0;
