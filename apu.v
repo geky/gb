@@ -31,28 +31,22 @@ output AUD_DACDAT;
 inout AUD_DACLRCK;
 output AUD_XCK;
 
-reg [7:0] left;
-reg [7:0] right;
+reg [7:0] mix;
 
 always @(*) begin
-    left = 0;
-    right = 0;
+    mix = 0;
     
     if (nr52[7]) begin
-        if (nr51[7]) left = left + nr4_output;
-        if (nr51[6]) left = left + nr3_output;
-        if (nr51[5]) left = left + nr2_output;
-        if (nr51[4]) left = left + nr1_output;
-        if (nr51[3]) right = right + nr4_output;
-        if (nr51[2]) right = right + nr3_output;
-        if (nr51[1]) right = right + nr2_output;
-        if (nr51[0]) right = right + nr1_output;
+        mix = mix + nr4_output;
+        mix = mix + nr3_output;
+        mix = mix + nr2_output;
+        mix = mix + nr1_output;
     end
 end
 
 audio audio(
     clock25mhz, clock12500khz, hard_resetn,
-    {(left + right) >> 1, 16'b0},
+    {mix, 16'b0},
 
     //////////// Audio //////////
 	AUD_ADCDAT,
@@ -133,9 +127,10 @@ always @(posedge clock64hz or negedge resetn or posedge nr1_reset or posedge nr1
     end else if (nr1_envelope_reset) begin
         nr1_envelope <= nr1_indata[7:4];
         nr1_envcount <= nr1_indata[2:0];
-    end else begin
-        if (nr1_envcount != 0) begin
-            nr1_envcount <= nr1_envcount - 1'b1;
+    end else if (nr1[2][2:0] != 0) begin
+        if (nr1_envcount == 0) begin
+            nr1_envcount <= nr1[2][2:0];
+            
             if (nr1[2][3]) begin
                 if (nr1_envelope < 4'd15) begin
                     nr1_envelope = nr1_envelope + 1'b1;
@@ -145,6 +140,8 @@ always @(posedge clock64hz or negedge resetn or posedge nr1_reset or posedge nr1
                     nr1_envelope = nr1_envelope - 1'b1;
                 end
             end
+        end else begin
+            nr1_envcount <= nr1_envcount - 1'b1;
         end
     end
 end
@@ -209,9 +206,10 @@ always @(posedge clock64hz or negedge resetn or posedge nr2_reset or posedge nr2
     end else if (nr2_envelope_reset) begin
         nr2_envelope <= nr2_indata[7:4];
         nr2_envcount <= nr2_indata[2:0];
-    end else begin
-        if (nr2_envcount != 0) begin
-            nr2_envcount <= nr2_envcount - 1'b1;
+    end else if (nr2[2][2:0] != 0) begin
+        if (nr2_envcount == 0) begin
+            nr2_envcount <= nr2[2][2:0];
+            
             if (nr2[2][3]) begin
                 if (nr2_envelope < 4'd15) begin
                     nr2_envelope = nr2_envelope + 1'b1;
@@ -221,6 +219,8 @@ always @(posedge clock64hz or negedge resetn or posedge nr2_reset or posedge nr2
                     nr2_envelope = nr2_envelope - 1'b1;
                 end
             end
+        end else begin
+            nr2_envcount <= nr2_envcount - 1'b1;
         end
     end
 end
@@ -342,9 +342,10 @@ always @(posedge clock64hz or negedge resetn or posedge nr4_reset or posedge nr4
     end else if (nr4_envelope_reset) begin
         nr4_envelope <= nr4_indata[7:4];
         nr4_envcount <= nr4_indata[2:0];
-    end else begin
-        if (nr4_envcount != 0) begin
-            nr4_envcount <= nr4_envcount - 1'b1;
+    end else if (nr4[2][2:0] != 0) begin
+        if (nr4_envcount == 0) begin
+            nr4_envcount <= nr4[2][2:0];
+            
             if (nr4[2][3]) begin
                 if (nr4_envelope < 4'd15) begin
                     nr4_envelope = nr4_envelope + 1'b1;
@@ -354,6 +355,8 @@ always @(posedge clock64hz or negedge resetn or posedge nr4_reset or posedge nr4
                     nr4_envelope = nr4_envelope - 1'b1;
                 end
             end
+        end else begin
+            nr4_envcount <= nr4_envcount - 1'b1;
         end
     end
 end
@@ -375,12 +378,26 @@ always @(posedge clockgb or negedge resetn) begin
     integer i;
     
     if (!resetn) begin
-        for (i=0; i < 5; i=i+1) begin
-            nr1[i] <= 0;
-            nr2[i] <= 0;
-            nr3[i] <= 0;
-            nr4[i] <= 0;
-        end
+        nr1[0] <= 8'h80;
+        nr1[1] <= 8'hbf;
+        nr1[2] <= 8'hf3;
+        nr1[3] <= 8'h00;
+        nr1[4] <= 8'hb0;
+        nr2[0] <= 8'h00;
+        nr2[1] <= 8'h3f;
+        nr2[2] <= 8'h00;
+        nr2[3] <= 8'h00;
+        nr2[4] <= 8'hb0;
+        nr3[0] <= 8'h7f;
+        nr3[1] <= 8'hff;
+        nr3[2] <= 8'h9f;
+        nr3[3] <= 8'hbf;
+        nr3[4] <= 8'h00;
+        nr4[0] <= 8'h00;
+        nr4[1] <= 8'hff;
+        nr4[2] <= 8'h00;
+        nr4[3] <= 8'h00;
+        nr4[4] <= 8'h00;
         
         nr50 <= 8'hff;
         nr51 <= 8'hff;
