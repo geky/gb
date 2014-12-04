@@ -20,7 +20,7 @@
 ## PROGRAM "Quartus II"
 ## VERSION "Version 14.0.0 Build 200 06/17/2014 SJ Web Edition"
 
-## DATE    "Thu Dec 04 02:52:26 2014"
+## DATE    "Thu Dec 04 13:52:27 2014"
 
 ##
 ## DEVICE  "5CGXFC5C6F27C7"
@@ -47,6 +47,8 @@ create_clock -name {CLOCK_50_B8A} -period 20.000 -waveform { 0.000 10.000 } [get
 create_clock -name {div:div4mhz|out} -period 250.000 -waveform { 0.000 125.000 } [get_nets {div4mhz|out}]
 create_clock -name {div:div115200hz|out} -period 8000.000 -waveform { 0.000 4000.000 } [get_nets {div115200hz|out}]
 create_clock -name {div:div460800hz|out} -period 2000.000 -waveform { 0.000 1000.000 } [get_nets {div460800hz|out}]
+create_clock -name {div:div12500khz|out} -period 80.000 -waveform { 0.000 40.000 } [get_nets {div12500khz|out}]
+create_clock -name {div:div25mhz|out} -period 40.000 -waveform { 0.000 20.000 } [get_nets {div25mhz|out}]
 
 
 #**************************************************************
@@ -65,22 +67,22 @@ create_clock -name {div:div460800hz|out} -period 2000.000 -waveform { 0.000 1000
 # Set Clock Uncertainty
 #**************************************************************
 
-set_clock_uncertainty -rise_from [get_clocks {div:div4mhz|out}] -rise_to [get_clocks {div:div4mhz|out}]  0.270  
-set_clock_uncertainty -rise_from [get_clocks {div:div4mhz|out}] -fall_to [get_clocks {div:div4mhz|out}]  0.270  
-set_clock_uncertainty -rise_from [get_clocks {div:div4mhz|out}] -rise_to [get_clocks {CLOCK_50_B5B}]  0.270  
-set_clock_uncertainty -rise_from [get_clocks {div:div4mhz|out}] -fall_to [get_clocks {CLOCK_50_B5B}]  0.270  
-set_clock_uncertainty -fall_from [get_clocks {div:div4mhz|out}] -rise_to [get_clocks {div:div4mhz|out}]  0.270  
-set_clock_uncertainty -fall_from [get_clocks {div:div4mhz|out}] -fall_to [get_clocks {div:div4mhz|out}]  0.270  
-set_clock_uncertainty -fall_from [get_clocks {div:div4mhz|out}] -rise_to [get_clocks {CLOCK_50_B5B}]  0.270  
-set_clock_uncertainty -fall_from [get_clocks {div:div4mhz|out}] -fall_to [get_clocks {CLOCK_50_B5B}]  0.270  
-set_clock_uncertainty -rise_from [get_clocks {CLOCK_50_B5B}] -rise_to [get_clocks {CLOCK_50_B5B}] -setup 0.280  
-set_clock_uncertainty -rise_from [get_clocks {CLOCK_50_B5B}] -rise_to [get_clocks {CLOCK_50_B5B}] -hold 0.270  
-set_clock_uncertainty -rise_from [get_clocks {CLOCK_50_B5B}] -fall_to [get_clocks {CLOCK_50_B5B}] -setup 0.280  
-set_clock_uncertainty -rise_from [get_clocks {CLOCK_50_B5B}] -fall_to [get_clocks {CLOCK_50_B5B}] -hold 0.270  
-set_clock_uncertainty -fall_from [get_clocks {CLOCK_50_B5B}] -rise_to [get_clocks {CLOCK_50_B5B}] -setup 0.280  
-set_clock_uncertainty -fall_from [get_clocks {CLOCK_50_B5B}] -rise_to [get_clocks {CLOCK_50_B5B}] -hold 0.270  
-set_clock_uncertainty -fall_from [get_clocks {CLOCK_50_B5B}] -fall_to [get_clocks {CLOCK_50_B5B}] -setup 0.280  
-set_clock_uncertainty -fall_from [get_clocks {CLOCK_50_B5B}] -fall_to [get_clocks {CLOCK_50_B5B}] -hold 0.270  
+set_clock_uncertainty -rise_from [get_clocks {div:div25mhz|out}] -rise_to [get_clocks {div:div25mhz|out}]  0.270  
+set_clock_uncertainty -rise_from [get_clocks {div:div25mhz|out}] -fall_to [get_clocks {div:div25mhz|out}]  0.270  
+set_clock_uncertainty -rise_from [get_clocks {div:div25mhz|out}] -rise_to [get_clocks {CLOCK_50_B5B}]  0.270  
+set_clock_uncertainty -rise_from [get_clocks {div:div25mhz|out}] -fall_to [get_clocks {CLOCK_50_B5B}]  0.270  
+set_clock_uncertainty -fall_from [get_clocks {div:div25mhz|out}] -rise_to [get_clocks {div:div25mhz|out}]  0.270  
+set_clock_uncertainty -fall_from [get_clocks {div:div25mhz|out}] -fall_to [get_clocks {div:div25mhz|out}]  0.270  
+set_clock_uncertainty -fall_from [get_clocks {div:div25mhz|out}] -rise_to [get_clocks {CLOCK_50_B5B}]  0.270  
+set_clock_uncertainty -fall_from [get_clocks {div:div25mhz|out}] -fall_to [get_clocks {CLOCK_50_B5B}]  0.270  
+set_clock_uncertainty -rise_from [get_clocks {div:div12500khz|out}] -rise_to [get_clocks {div:div12500khz|out}]  0.270  
+set_clock_uncertainty -rise_from [get_clocks {div:div12500khz|out}] -fall_to [get_clocks {div:div12500khz|out}]  0.270  
+set_clock_uncertainty -rise_from [get_clocks {div:div12500khz|out}] -rise_to [get_clocks {CLOCK_50_B5B}]  0.270  
+set_clock_uncertainty -rise_from [get_clocks {div:div12500khz|out}] -fall_to [get_clocks {CLOCK_50_B5B}]  0.270  
+set_clock_uncertainty -fall_from [get_clocks {div:div12500khz|out}] -rise_to [get_clocks {div:div12500khz|out}]  0.270  
+set_clock_uncertainty -fall_from [get_clocks {div:div12500khz|out}] -fall_to [get_clocks {div:div12500khz|out}]  0.270  
+set_clock_uncertainty -fall_from [get_clocks {div:div12500khz|out}] -rise_to [get_clocks {CLOCK_50_B5B}]  0.270  
+set_clock_uncertainty -fall_from [get_clocks {div:div12500khz|out}] -fall_to [get_clocks {CLOCK_50_B5B}]  0.270  
 set_clock_uncertainty -rise_from [get_clocks {div:div460800hz|out}] -rise_to [get_clocks {div:div460800hz|out}]  0.270  
 set_clock_uncertainty -rise_from [get_clocks {div:div460800hz|out}] -fall_to [get_clocks {div:div460800hz|out}]  0.270  
 set_clock_uncertainty -rise_from [get_clocks {div:div460800hz|out}] -rise_to [get_clocks {div:div115200hz|out}]  0.270  
@@ -111,8 +113,24 @@ set_clock_uncertainty -fall_from [get_clocks {div:div115200hz|out}] -rise_to [ge
 set_clock_uncertainty -fall_from [get_clocks {div:div115200hz|out}] -fall_to [get_clocks {CLOCK_50_B5B}]  0.270  
 set_clock_uncertainty -rise_from [get_clocks {div:div4mhz|out}] -rise_to [get_clocks {div:div115200hz|out}]  0.270  
 set_clock_uncertainty -rise_from [get_clocks {div:div4mhz|out}] -fall_to [get_clocks {div:div115200hz|out}]  0.270  
+set_clock_uncertainty -rise_from [get_clocks {div:div4mhz|out}] -rise_to [get_clocks {div:div4mhz|out}]  0.270  
+set_clock_uncertainty -rise_from [get_clocks {div:div4mhz|out}] -fall_to [get_clocks {div:div4mhz|out}]  0.270  
+set_clock_uncertainty -rise_from [get_clocks {div:div4mhz|out}] -rise_to [get_clocks {CLOCK_50_B5B}]  0.270  
+set_clock_uncertainty -rise_from [get_clocks {div:div4mhz|out}] -fall_to [get_clocks {CLOCK_50_B5B}]  0.270  
 set_clock_uncertainty -fall_from [get_clocks {div:div4mhz|out}] -rise_to [get_clocks {div:div115200hz|out}]  0.270  
 set_clock_uncertainty -fall_from [get_clocks {div:div4mhz|out}] -fall_to [get_clocks {div:div115200hz|out}]  0.270  
+set_clock_uncertainty -fall_from [get_clocks {div:div4mhz|out}] -rise_to [get_clocks {div:div4mhz|out}]  0.270  
+set_clock_uncertainty -fall_from [get_clocks {div:div4mhz|out}] -fall_to [get_clocks {div:div4mhz|out}]  0.270  
+set_clock_uncertainty -fall_from [get_clocks {div:div4mhz|out}] -rise_to [get_clocks {CLOCK_50_B5B}]  0.270  
+set_clock_uncertainty -fall_from [get_clocks {div:div4mhz|out}] -fall_to [get_clocks {CLOCK_50_B5B}]  0.270  
+set_clock_uncertainty -rise_from [get_clocks {CLOCK_50_B5B}] -rise_to [get_clocks {CLOCK_50_B5B}] -setup 0.280  
+set_clock_uncertainty -rise_from [get_clocks {CLOCK_50_B5B}] -rise_to [get_clocks {CLOCK_50_B5B}] -hold 0.270  
+set_clock_uncertainty -rise_from [get_clocks {CLOCK_50_B5B}] -fall_to [get_clocks {CLOCK_50_B5B}] -setup 0.280  
+set_clock_uncertainty -rise_from [get_clocks {CLOCK_50_B5B}] -fall_to [get_clocks {CLOCK_50_B5B}] -hold 0.270  
+set_clock_uncertainty -fall_from [get_clocks {CLOCK_50_B5B}] -rise_to [get_clocks {CLOCK_50_B5B}] -setup 0.280  
+set_clock_uncertainty -fall_from [get_clocks {CLOCK_50_B5B}] -rise_to [get_clocks {CLOCK_50_B5B}] -hold 0.270  
+set_clock_uncertainty -fall_from [get_clocks {CLOCK_50_B5B}] -fall_to [get_clocks {CLOCK_50_B5B}] -setup 0.280  
+set_clock_uncertainty -fall_from [get_clocks {CLOCK_50_B5B}] -fall_to [get_clocks {CLOCK_50_B5B}] -hold 0.270  
 
 
 #**************************************************************
