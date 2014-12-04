@@ -42,6 +42,7 @@ output SRAM_OE_n;
 output SRAM_WE_n;
 
 
+// Banked ROM //
 reg [18:0] sram_address;
 wire [7:0] sram_data;
 
@@ -79,7 +80,7 @@ always @(posedge clockgb or negedge resetn) begin
         bank <= 5'b1;
     end else begin
         if (bank_store) begin
-            if (bank_indata == 0) begin
+            if (bank_indata[4:0] == 0) begin
                 bank <= 5'b1;
             end else begin
                 bank <= bank_indata[4:0];
@@ -107,7 +108,8 @@ mmap #(16'h2000, 16'h3fff) bank_mmap(
     bank_indata,,, bank_store
 );
 
-// Low RAM (Large) //
+
+// Banked RAM //
 wire [15:0] ram_address;
 wire [7:0] ram_indata;
 wire [7:0] ram_outdata;
