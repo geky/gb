@@ -217,7 +217,7 @@ boot boot(
 );
 
 
-// PPU //
+// APU //
 wire [7:0] apu_data;
 
 apu apu(

@@ -262,6 +262,43 @@ mmap #(16'h9800, 16'hbfff) bg_mmap(
 );
 
 
+reg [11:0] sprite_tile_offset [SPRITE_COUNT];
+reg [11:0] bg_tile_offset;
+reg [11:0] w_tile_offset;
+
+always @(*) begin
+    integer i;
+    
+    if (tile_store || tile_load) begin
+        for (i=0; i < SPRITE_COUNT; i=i+1) begin
+            sprite_tile_offset[i] = tile_address[12:1];
+        end
+        
+        bg_tile_offset = tile_address[12:1];
+        w_tile_offset = tile_address[12:1];
+    end else begin
+        for (i=0; i < SPRITE_COUNT; i=i+1) begin
+            if (lcdc[2]) begin
+                sprite_tile_offset[i] = {1'b0, sprite_tile[i][7:1], sprite_y[i][0][3:0]};
+            end else begin
+                sprite_tile_offset[i] = {1'b0, sprite_tile[i][7:0], sprite_y[i][0][2:0]};
+            end
+        end
+        
+        bg_tile_offset = {1'b0, bg_tile, bg_y[0]};
+        w_tile_offset = {1'b0, w_tile, w_y[0]};
+        
+        if (!lcdc[4]) begin
+            if (bg_tile_offset < 12'h400) begin
+                bg_tile_offset = bg_tile_offset + 12'h800;
+            end
+            if (w_tile_offset < 12'h400) begin
+                w_tile_offset = w_tile_offset + 12'h800;
+            end
+        end
+    end
+end
+
 wire [7:0] sprite_hi [SPRITE_COUNT];
 wire [7:0] sprite_lo [SPRITE_COUNT];
 reg [1:0] sprite_pid [SPRITE_COUNT];
@@ -272,32 +309,8 @@ wire [7:0] w_hi;
 wire [7:0] w_lo;
 reg [1:0] w_pid;
 
-reg [11:0] sprite_tile_offset [SPRITE_COUNT];
-reg [11:0] bg_tile_offset;
-reg [11:0] w_tile_offset;
-
-always @(*) begin
+always @(*) begin  
     integer i;
-    for (i=0; i < SPRITE_COUNT; i=i+1) begin
-        if (lcdc[2]) begin
-            sprite_tile_offset[i] = {1'b0, sprite_tile[i][7:1], sprite_y[i][0][3:0]};
-        end else begin
-            sprite_tile_offset[i] = {1'b0, sprite_tile[i][7:0], sprite_y[i][0][2:0]};
-        end
-    end
-    
-    bg_tile_offset = {1'b0, bg_tile, bg_y[0]};
-    w_tile_offset = {1'b0, w_tile, w_y[0]};
-    
-    if (!lcdc[4]) begin
-        if (bg_tile_offset < 12'h400) begin
-            bg_tile_offset = bg_tile_offset + 12'h800;
-        end
-        if (w_tile_offset < 12'h400) begin
-            w_tile_offset = w_tile_offset + 12'h800;
-        end
-    end
-    
     for (i=0; i < SPRITE_COUNT; i=i+1) begin
         sprite_pid[i] = {sprite_hi[i][3'd7-sprite_x[i][2]], sprite_lo[i][3'd7-sprite_x[i][2]]};
     end
@@ -305,46 +318,57 @@ always @(*) begin
     w_pid = {w_hi[3'd7-w_x[2]], w_lo[3'd7-w_x[2]]};
 end
 
-
 generate
 genvar i;
     for (i=0; i < SPRITE_COUNT; i=i+1) begin : SPRITE_TILE_LOOP
         tram sprite_tram(
-            tile_address, sprite_tile_offset[i],
+            sprite_tile_offset[i],
+            tile_bytes,
             clockgb,
-            tile_indata,,
-            tile_store, 1'b0,, 
+            {tile_indata, tile_indata},
+            tile_store,
             {sprite_hi[i], sprite_lo[i]}
         );
     end
 endgenerate
-
+    
 tram bg_tram(
-	tile_address, bg_tile_offset,
-	clockgb,
-	tile_indata,,
-	tile_store, 1'b0,
-    tile_outdata, {bg_hi, bg_lo}
+    bg_tile_offset,
+    tile_bytes,
+    clockgb,
+    {tile_indata, tile_indata},
+    tile_store,
+    {bg_hi, bg_lo}
 );
-
+    
 tram w_tram(
-	tile_address, w_tile_offset,
-	clockgb,
-	tile_indata,,
-	tile_store, 1'b0,,
-	{w_hi, w_lo}
+    w_tile_offset,
+    tile_bytes,
+    clockgb,
+    {tile_indata, tile_indata},
+    tile_store,
+    {w_hi, w_lo}
 );
 
 wire [15:0] tile_address;
+reg [15:0] tile_postaddress [2];
+wire [1:0] tile_bytes = tile_address[0] ? 2'b10 : 2'b01;
 wire [7:0] tile_indata;
-wire [7:0] tile_outdata;
+wire [7:0] tile_outdata = tile_postaddress[1][0] ? bg_hi : bg_lo;
 wire [7:0] tile_data;
+wire tile_load;
 wire tile_store;
+reg tile_part;
+
+always @(posedge clockgb) begin
+    tile_postaddress[0] <= tile_address;
+    tile_postaddress[1] <= tile_postaddress[0];
+end
 
 mmap #(16'h8000, 16'h97ff) tile_mmap(
     clockgb, resetn,
     address, indata, tile_data, load, store,
-    tile_address, tile_indata, tile_outdata,, tile_store
+    tile_address, tile_indata, tile_outdata, tile_load, tile_store
 );
 
 
