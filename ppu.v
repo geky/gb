@@ -203,7 +203,7 @@ always @(posedge clockgb) begin
     w_x[0] <= w_xpre[2:0];
     w_y[0] <= w_ypre[2:0];
     w_pal[0] <= 0;
-    w_val[0] <= (ppu_x[0]+8'd7 >= wx+8'd7 && ppu_y[0] >= wy);
+    w_val[0] <= (ppu_x[0]+8'd7 >= wx && ppu_y[0] >= wy);
     w_x[1] <= w_x[0];
     w_y[1] <= w_y[0];
     w_pal[1] <= w_pal[0];
