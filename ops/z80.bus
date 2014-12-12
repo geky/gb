@@ -1,0 +1,310 @@
+# Definition of bus connections for various opcode types
+
+# These are just used as macros inside other instructions
+FETCH       PC ADDl PC 1
+STASH       TEMP OR D8 0
+NOP         0 OR 0 0
+
+# Special opcodes
+NOP_        NOP
+HALT_       # Halting and prefix instructions
+PREFIX      # are handled externally
+STOP0       PC SUB PC 1
+
+# Move instructions
+LD,         $0 OR $1 0
+LD2,d16     FETCH, NOP, STASH
+            FETCH, NOP, $0 OR D16 0
+LD2(),      DATA OR $1 0
+            0 ORs $0 0, NOP
+LD2(+),     DATA OR $1 0
+            $0 ADDs $0 1, NOP
+LD2(-),     DATA OR $1 0
+            $0 SUBs $0 1, NOP
+
+LD,d8       FETCH, NOP
+            $0 OR D8 0
+LD2(),d8    FETCH, NOP
+            DATA OR D8 0
+            0 ORs $0 0, NOP
+LD2(a16),   FETCH, NOP, STASH
+            FETCH, DATA OR $0 0
+            TEMP ADDs D16 1, NOP
+            DATA SWAP2 $0 0
+            0 ORs TEMP 0, NOP
+
+LD2,()      0 ORl $1 0, NOP
+            $0 OR D8 0
+LD2,(+)     $1 ADDl $1 1, NOP
+            $0 OR D8 0
+LD2,(-)     $1 SUBl $1 1, NOP
+            $0 OR D8 0
+
+LDH(a8),    FETCH, NOP
+            TEMP OR MASK D8
+            DATA OR $0 0
+            0 ORs TEMP 0, NOP
+LDH,(a8)    FETCH, NOP
+            TEMP OR MASK D8
+            0 ORl TEMP 0, NOP
+            $0 OR D8 0
+LD(a16),    FETCH, NOP, STASH
+            FETCH, DATA OR $0 0
+            0 ORs D16 0, NOP
+LD,(a16)    FETCH, NOP, STASH
+            FETCH, NOP
+            0 ORl D16 0, NOP
+            $0 OR D8 0
+
+LD(),       TEMP OR MASK $0
+            DATA OR $1 0
+            0 ORs TEMP 0, NOP
+LD,()       TEMP OR MASK $1
+            0 ORl TEMP 0, NOP
+            $0 OR D8 0
+LD2,+r8     FETCH, NOP
+            $0 ADD2~ $1 D8
+LD2,        $0 OR $1 0
+
+# Increment and decrement instructions
+INC         $0 ADD~ $0 1
+INC2        INC
+INC2()      0 ORl $0 0, NOP
+            DATA ADD~ D8 1
+            0 ORs $0 0, NOP
+
+DEC         $0 SUB~ $0 1
+DEC2        DEC
+DEC2()      0 ORl $0 0, NOP
+            DATA SUB~ D8 1
+            0 ORs $0 0, NOP
+
+# Arithmetic instructions
+ADD2,       $0 ADD2~ $0 $1
+ADD2,r8     FETCH, NOP
+            $0 ADD2~ $0 D8
+ADD,        $0 ADD~ $0 $1
+ADD2,()     0 ORl $1 0, NOP
+            $0 ADD~ $0 D8
+ADD,d8      FETCH, NOP
+            $0 ADD~ $0 D8
+
+ADC,        $0 ADC~ $0 $1
+ADC2,()     0 ORl $1 0, NOP
+            $0 ADC~ $0 D8
+ADC,d8      FETCH, NOP
+            $0 ADC~ $0 D8
+
+SUB         A SUB~ A $0
+SUB2()      0 ORl $0 0, NOP
+            A SUB~ A D8
+SUBd8       FETCH, NOP
+            A SUB~ A D8
+
+SBC,        $0 SBC~ $0 $1
+SBC2,()     0 ORl $1 0, NOP
+            $0 SBC~ $0 D8
+SBC,d8      FETCH, NOP
+            $0 SBC~ $0 D8
+
+AND         A AND~ A $0
+AND2()      0 ORl $0 0, NOP
+            A AND~ A D8
+ANDd8       FETCH, NOP
+            A AND~ A D8
+
+XOR         A XOR~ A $0
+XOR2()      0 ORl $0 0, NOP
+            A XOR~ A D8
+XORd8       FETCH, NOP
+            A XOR~ A D8
+
+OR          A OR~ A $0
+OR2()       0 ORl $0 0, NOP
+            A OR~ A D8
+ORd8        FETCH, NOP
+            A OR~ A D8
+
+CP          0 SUB~ A $0
+CP2()       0 ORl $0 0, NOP
+            0 SUB~ A D8
+CPd8        FETCH, NOP
+            0 SUB~ A D8
+
+# Control flow instructions
+JRr8        FETCH, NOP
+            PC ADD PC D8
+JR,r8       COND(1), JRr8
+
+RET_        SP ADDl SP 1, NOP, STASH
+            SP ADDl SP 1, NOP
+            PC OR D16 0
+RET         COND(0), RET_
+
+JPa16       FETCH, NOP, STASH
+            FETCH, NOP
+            PC OR D16 0
+JP,a16      COND(2), JPa16
+JP2()       PC OR $0 0
+
+CALLa16     TEMP ADD PC 2
+            SP SUB SP 1
+            DATA SWAP2 TEMP 0
+            SP SUBs SP 1, NOP
+            DATA OR TEMP 0
+            0 ORs SP 0, NOP
+            FETCH, NOP, STASH
+            FETCH, NOP
+            PC OR D16 0
+CALL,a16    COND(2), CALLa16
+
+RST         SP SUB SP 1
+            DATA SWAP2 PC 0
+            SP SUBs SP 1, NOP
+            DATA OR PC 0
+            0 ORs SP 0, NOP
+            PC OR %0 0
+
+RST00       RST(0)
+RST08       RST(8)
+RST10       RST(10)
+RST18       RST(18)
+RST20       RST(20)
+RST28       RST(28)
+RST30       RST(30)
+RST38       RST(38)
+
+# Interupt handling instructions
+RETI_       SP ADDl SP 1, NOP, STASH
+            SP ADDl SP 1, NOP
+            PC OR D16 0
+            IE OR 1 0
+DI_         IE OR 0 0
+EI_         IE OR 1 0
+
+# Stack manipulation instructions
+POP2        SP ADDl SP 1, NOP, STASH
+            SP ADDl SP 1, NOP
+            $0 OR~ D16 0
+
+PUSH2       SP SUB SP 1
+            DATA SWAP2 $0 0
+            SP SUBs SP 1, NOP
+            DATA OR $0 0
+            0 ORs SP 0, NOP
+
+# Misc instructions
+DAA_        A DAA~ A 0
+CPL_        A CPL~ A 0
+SCF_        0 OR~ 0 0
+CCF_        AF XOR~ AF 10
+
+# Rotate/Shift instructions
+RLCA_       A RLC~ A 0
+RLC         $0 RLC~ $0 0
+RLC2()      0 ORl $0 0, NOP
+            DATA RLC~ D8 0
+            0 ORs $0 0, NOP
+RLA_        A RL~ A 0
+RL          $0 RL~ $0 0
+RL2()       0 ORl $0 0, NOP
+            DATA RL~ D8 0
+            0 ORs $0 0, NOP
+
+RRCA_       A RRC~ A 0
+RRC2()      0 ORl $0 0, NOP
+            DATA RRC~ D8 0
+            0 ORs $0 0, NOP
+RRC         $0 RRC~ $0 0
+RRA_        A RR~ A 0
+RR          $0 RR~ $0 0
+RR2()       0 ORl $0 0, NOP
+            DATA RR~ D8 0
+            0 ORs $0 0, NOP
+
+SLA         $0 SLA~ $0 0
+SLA2()      0 ORl $0 0, NOP
+            DATA SLA~ D8 0
+            0 ORs $0 0, NOP
+
+SRA         $0 SRA~ $0 0
+SRA2()      0 ORl $0 0, NOP
+            DATA SRA~ D8 0
+            0 ORs $0 0, NOP
+
+SRL         $0 SRL~ $0 0
+SRL2()      0 ORl $0 0, NOP
+            DATA SRL~ D8 0
+            0 ORs $0 0, NOP
+
+SWAP        $0 SWAP~ $0 0
+SWAP2()     0 ORl $0 0, NOP
+            DATA SWAP~ D8 0
+            0 ORs $0 0, NOP
+
+# Bitwise operations
+BIT         0 AND~ $0 %0
+BIT2        0 ORl $0 0, NOP
+            0 AND~ D8 %0
+
+BIT0,       BIT(1)
+BIT1,       BIT(2)
+BIT2,       BIT(4)
+BIT3,       BIT(8)
+BIT4,       BIT(10)
+BIT5,       BIT(20)
+BIT6,       BIT(40)
+BIT7,       BIT(80)
+BIT20,()    BIT2(1)
+BIT21,()    BIT2(2)
+BIT22,()    BIT2(4)
+BIT23,()    BIT2(8)
+BIT24,()    BIT2(10)
+BIT25,()    BIT2(20)
+BIT26,()    BIT2(40)
+BIT27,()    BIT2(80)
+
+RES         $0 AND $0 %0
+RES2        0 ORl $0 0, NOP
+            DATA AND D8 %0
+            0 ORs $0 0, NOP
+
+RES0,       RES(fe)
+RES1,       RES(fd)
+RES2,       RES(fb)
+RES3,       RES(f7)
+RES4,       RES(ef)
+RES5,       RES(df)
+RES6,       RES(bf)
+RES7,       RES(7f)
+RES20,()    RES2(fe)
+RES21,()    RES2(fd)
+RES22,()    RES2(fb)
+RES23,()    RES2(f7)
+RES24,()    RES2(ef)
+RES25,()    RES2(df)
+RES26,()    RES2(bf)
+RES27,()    RES2(7f)
+
+SET         $0 OR $0 %0
+SET2        0 ORl $0 0, NOP
+            DATA OR D8 %0
+            0 ORs $0 0, NOP
+
+SET0,       SET(1)
+SET1,       SET(2)
+SET2,       SET(4)
+SET3,       SET(8)
+SET4,       SET(10)
+SET5,       SET(20)
+SET6,       SET(40)
+SET7,       SET(80)
+SET20,()    SET2(1)
+SET21,()    SET2(2)
+SET22,()    SET2(4)
+SET23,()    SET2(8)
+SET24,()    SET2(10)
+SET25,()    SET2(20)
+SET26,()    SET2(40)
+SET27,()    SET2(80)
+
