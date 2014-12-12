@@ -128,10 +128,11 @@ can be directly controlled by precalculated values.
 
 Each channel has a timer controlling its wave. This is the most important timer
 in that its frequency directly maps to the frequency of the tone being played.
-Additionally, each channel, except for the wave channel, has a timer controlling
-the envelope which allows a decay to be performed each note. The first square 
-wave also has a timer controlling the frequency itself, which allows the 
-frequency to be modulated for interesting effects.
+Each channel also has a length timer which determines how long the note should 
+play. Additionally, each channel, except for the wave channel, has a timer 
+controlling the envelope which allows a decay to be performed each note. The 
+first square wave also has a timer controlling the frequency itself, which allows 
+the frequency to be modulated for interesting effects.
 
 There are only 4 channels on the Gameboy, 2 square channels, a programmable wave
 channel, and a noise channel. The square channels are implemented as simple square
@@ -144,7 +145,15 @@ effects. Rather than needed to perform multiplication to determine volume, the
 square and noise channels calculate a single boolean value each cycle and can 
 simply decide to output their volume.
 
-Every cycle of the APU, the current state of the 4-channels are mixed together. 
+Every cycle of the APU, the state of each component of each channel is mixed
+together to calculate a single output value.
+```
+Square: Sweep -> Freq -> Duty -> Length -> Volume -> Mixer -> Output
+Square:          Freq -> Duty -> Length -> Volume -> Mixer
+Wave:            Freq -> Wave -> Length -----------> Mixer
+Noise:           Freq -> LFSR -> Length -> Volume -> Mixer
+```
+
 Despite the simple design, the Gameboys APU provides incredible flexibility to 
 the programmers who knew how to use it.
 
