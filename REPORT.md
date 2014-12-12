@@ -1,0 +1,222 @@
+# The Very Gameboy Emulator - Technical Report #
+
+This report should cover the technical details of this project.
+While a large amount of information is known about how the Nintendo
+Gameboy works, not much is known about how the Gameboy is implemented.
+This emulator has been designed to replicate the functionality of the
+Nintendo Gameboy rather than being an implementation of the original 
+design. This report will hopefully document how the functionality is
+implemented and why.
+
+The Nintendo Gameboy is designed around a central data bus that was 
+used by either the CPU or the DMA module to communicate to all of the 
+connected components. From the timings of different operations, it seems 
+that all accesses on this data bus completed in exactly 2 cycles. This is 
+very convenient for this emulator because the memory IP unit that is provided
+for the Cyclone V also takes exactly 2 cycles. Communication from the CPU to 
+non-memory components is generally performed by memory mapped registers
+which drive the components operation.
+
+The following, borrowed from the Gameboy Manual, is the general layout 
+of the Gameboys memory map. The cartridge, which contains the game specific 
+data is mapped to the lowest range of addresses, while the memory mapped 
+registers are mapped to the highest range of addresses. This had the nice 
+side effect of increasing the speed of memory mapped register accesses due 
+to instructions for specifically accessing memory in the range of FF00 to FFFF.
+
+```
+Interrupt Enable Register        --
+--------------------------- FFFF  |
+Internal High RAM                 |
+--------------------------- FF80  |- Single byte addresses
+Unmapped                          |
+--------------------------- FF4C  |
+Memory mapped registers           |
+--------------------------- FF00 --
+Unmapped
+--------------------------- FEA0
+Sprite attribute memory
+--------------------------- FE00
+Echo of Internal Low RAM
+--------------------------- E000
+Internal Low RAM
+--------------------------- C000 --
+Switchable RAM bank               |- Cartridge RAM mapping
+--------------------------- A000 --
+Video RAM
+--------------------------- 8000 --
+Switchable ROM bank               |
+--------------------------- 4000  |- Cartridge ROM mapping
+ROM bank #0                       |
+--------------------------- 0000 --
+```
+
+In this emulator, the modules have been organized based on the functional 
+component that they emulate. While there are many functional components 
+currently implemented in the design, there are 3 core components that make
+the system functional. These are the Central Processing Unit (CPU), the Audio 
+Processing Unit (APU), and the Picture Processing Unit (PPU). The rest of 
+the report will cover how these core components operate.
+
+
+## The CPU ##
+
+The Nintendo Gameboys core processor, titled the LR35902, is the based on 
+the famous Zilog z80. It uses a CISC instruction set which encodes its 9 oepration
+specific registers directly in the instructions. It has an accumulator register A 
+and 6 general purpose 8-bit registers B, C, D, E, H, and L which can be combined 
+into 16 bit register pairs BC, DE, HL. Additionally, the four flags: zero, 
+subtraction, half-carry, and carry; can be accessed as the F register and gives 
+access to the AF register. This is especially useful for saving the processors
+state during interrupts. The LR35902 also has a seperate, 16-bit Stack Pointer 
+and Program Counter. A full instruction listing can be found [here](http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html).
+
+Creating the Gameboys processor was expected to be the most time consuming and 
+tedious part of this project, so the bulk of the design was generated via Python.
+The full design can be found in the z80.v file, which uses the z80_alu.v and the 
+generated z80_ucode.v.
+
+Unlike the original LR35902, which was concerned with space, this projects 
+processor was only concerned with complexity. This processor is designed around
+3 16-bit busses that are tied to the ALU.
+- Bus A = Left hand side of operation and address for memory access
+- Bus B = Right hand side of operation
+- Bus D = Destination for result from operation
+
+Each bus has access to any part of the processor necessary, such as registers
+or data from the bus. This is initially generated in the design script, but 
+each connection must be made by hand.
+
+The coordination of each operation is executed by a massive finite state machine
+which can be controlled by specifying the FSM address itself as a destination.
+This is referred to as the control store and is the sole purpose of the z80_ucode
+module. Each state in the FSM specifies 6 things.
+- The operation to be performed
+- The source to put on bus A
+- The source to put on bus B
+- The destination for bus D
+- The conditions codes that are set
+- Load and Store flags
+- The next state if not set by bus D
+
+While some small cases in the control store were written by hand, a significant 
+majority was generated by the ops/gen.py script. This script used the instruction
+listing of the z80 and matched the structure of opcodes to a description of bus
+connections specified in ops/z80.bus. Register names were handled seperately in
+the script and presented as simple bus targets. The script also handled condition
+codes and branches in control logic. Additionally, the gen script generates 
+sufficient wait states to match the expected cycle count per instruction, which is
+necessary for correct emulation of many games. 
+
+The most interesting difference in this processors design from the original 
+LR35902 is the use of a 16-bit ALU. This greatly simplified the complexity of the
+processor and often led to what could have been significant gains in cycle counts.
+
+
+## The APU ##
+
+Of the 3 core components in the Gameboy, the APU is by far the simplest one. 
+The simplicity of the Gameboys APU is actually worth talking about if only 
+because of how well thoughtout the design actually is.
+
+The APU is operated by a set of user controlled timers which control 4 seperate
+channels. These timers are decremented by divisions of the Gameboy clock, and
+each time a timer hits zero, it is reset with its original value, and some event
+is executed. This creates a very neat interface that is both simple from a design
+perspective but powerful from a user perspective in that these events frequencies
+can be directly controlled by precalculated values.
+
+Each channel has a timer controlling its wave. This is the most important timer
+in that its frequency directly maps to the frequency of the tone being played.
+Additionally, each channel, except for the wave channel, has a timer controlling
+the envelope which allows a decay to be performed each note. The first square 
+wave also has a timer controlling the frequency itself, which allows the 
+frequency to be modulated for interesting effects.
+
+There are only 4 channels on the Gameboy, 2 square channels, a programmable wave
+channel, and a noise channel. The square channels are implemented as simple square
+waves which alternate between on and off at a specifiable duty cycle. The 
+programmable wave channel store the wave to play as 32 4-bit values and allows
+any noise to be created at the cost of processing power and space. The noise 
+channel uses a linear feedback shift register to easily create white-noise, which
+can be modulated with the envelope to create interesting percussion of game 
+effects. Rather than needed to perform multiplication to determine volume, the
+square and noise channels calculate a single boolean value each cycle and can 
+simply decide to output their volume.
+
+Every cycle of the APU, the current state of the 4-channels are mixed together. 
+Despite the simple design, the Gameboys APU provides incredible flexibility to 
+the programmers who knew how to use it.
+
+
+## The PPU ##
+
+The Picture Processing Unit is the functional unit responsible for rendering the 
+image on the screen. I personally find this bit of technology the most impressive
+component in the original Gameboy since they were not only concerned with the 
+speed necessary to make the game appear playable, but also the limited memory that
+was available.
+
+To reduce memory consumption as much as possible, the PPU used several levels of 
+indirection to display items on the screen. Any display element was stored as a 
+16-byte tile in tile ram which resides in the address range 8000 to 97FF. The 
+tile represented an 8x8 image encoded as 2-bit pixels. These pixels were not 
+displayed directly, but actually mapped to a palette which encoded 4 different 
+colors. Due to the monochrome nature of the Gameboys display, this only required
+2-bits per pixel and allowed the palette to fit nicely in a single byte.
+
+To actually display these tiles, the were 2 methods of display. The more useful
+but size limited method was referred to as sprites. Each of the 40 sprites was 
+stored as 4-bytes of data in the address range FE00 to FE9F. Two bytes were used 
+for the X and Y location of the sprite, the third byte specified which tile to 
+use, and the last byte stored several flags such as various transparency settings 
+and which palette to use. The other method was referred to as the background.
+The background was a 256x256 byte region of memory which stored only tile 
+numbers in the address range 9800 to BFFF. This background was positionable 
+by two sets of registers, the window X and Y and the scroll X and Y which 
+controlled 2 seperate views of the background.
+
+The actual impressive part of the PPU was that it managed to perform all of 
+this indirection in a single cycle. In 1 160-pixel horizontal scanline, the
+Gameboys PPU took only 251 cycles. With at most 1 cycle per pixel, the PPU
+must have had some form of pipelining.
+
+For my implementation, the PPU was implemented as a 5-stage pipeline for 
+each pixel. It would first perform a lookup of the pixel in all of the sprites
+and background views to determine the possible tile numbers. Unfortunately, 
+due to possible transparent pixels, this then required a tile lookup for each
+possible pixel that could be displayed. Finally, the transparencies and 
+priorities of the background and sprites are used to resolve the actual pixel
+that is displayed. Finally, this is looked up in the palette and stored
+in the VRAM buffer used to seperate the PPU from the actual display.
+```
+X/Y -+-----------[]----------+--[]-------[]----------------[]------------+
+     |                       |                                           |
+     |           +---------+ |  +---------+                              |
+     +-> SX/SY ->|] BG RAM |-+->|] T RAM [|-+-> PRI/TRANS -[]-> PALETTE -+-> VRAM
+     |           +---------+ |  +---------+ |
+     |           +---------+ |  +---------+ |
+     +-> WX/WY ->|] BG RAM |-+->|] T RAM [|-+
+     |           +---------+ |  +---------+ |
+     |                       |  +---------+ |
+     +-> SPRITE 0 --[]-------+->|] T RAM [|-+
+     |                       |  +---------+ |
+     |                       |  +---------+ |
+     +-> SPRITE 1 --[]-------+->|] T RAM [|-+
+     |     .                 |  +---------+ |
+     |     .                 |       .      |
+     |     .                 |       .      |
+     |     .                 |  +---------+ |
+     +-> SPRITE 39 -[]-------+->|] T RAM [|-+
+                                +---------+
+```
+
+While background ram could simply be dual ported, tile ram was needed 42 times.
+To meet this demand, I simply used 42 instances of tile ram that were synchronized
+through the same address and load/store lines. I believe the original Gameboy
+had a more complex implementation that avoided this massive increase in memory 
+accesses. The original Gameboy had the peculiar limitation of only being able to
+render 10 sprites per scan line, so I suspect they performed some sort of 
+preliminary pass to determine which sprites could appear in the y-axis. However,
+I found that is was much simpler to implement a design that calculates both 
+coordinates simultaneously.
